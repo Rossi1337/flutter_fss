@@ -1,3 +1,7 @@
+## 2.0.0-alpha1
+
+Complete internal restructuring. Adding support for more CSS attributes and fixing many issues.
+
 ## 1.0.0
 
 * Added support for vw, vh, vmin, vmax sizing

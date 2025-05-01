@@ -7,15 +7,15 @@ const styleSheet = '''
 
 * {
   font-size: 20px;
-  color: black;
 }
 
-div.mybox {
-  color: red;
+div {
+  background-color: lightblue;
 }
 
-#text2 {
-  color: blue;
+div.ex1 {
+  border: 1px solid black;
+  margin-block: 50px 25px;
 }
 
 ''';
@@ -25,7 +25,7 @@ void main() {
   runApp(const TestApp());
 }
 
-/// Creates a simple app with some styleable widgets.
+/// Creates a simple app with a single list.
 /// So you get the styles of the STYLESHEET above.
 class TestApp extends StatelessWidget {
   /// Constructor
@@ -35,20 +35,21 @@ class TestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FSS Inheritance Demo',
+      title: 'FSS Div Demo',
       builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        // This is the "parent" for the text elements
-        child: Fss<div>(
-          clazz: 'mybox',
-          c: ListView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
             children: [
-              // Center and ListView will be ignored as they are not stylable
-              Center(
-                child:
-                    Fss<span>(id: 'text1', c: 'Color inherited from parent.'),
+              Fss<div>(c: 'A div element with no specified margins.'),
+              Fss<div>(c: 'A div element with no specified margins.'),
+              Fss<div>(c: 'A div element with no specified margins.'),
+              Fss<div>(
+                clazz: 'ex1',
+                c: 'A div element with no specified margins.',
               ),
-              Fss<span>(id: 'text2', c: 'Color resolved via ID'),
+              Fss<div>(c: 'A div element with no specified margins.'),
             ],
           ),
         ),

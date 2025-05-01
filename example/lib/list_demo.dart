@@ -44,63 +44,62 @@ void main() {
 /// So you get the styles of the STYLESHEET above.
 class TestApp extends StatelessWidget {
   /// Constructor
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS List Demo',
-      builder: (c, _) => FssTheme.withAppDefaults(
-        context: c,
+      builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         child: ListView(
           children: [
             Fss.ul(
               children: [
-                Fss.text('With default icon'),
-                Fss.text('Second'),
-                Fss.text('Third'),
+                Fss<span>(c: 'With default icon'),
+                Fss<span>(c: 'Second'),
+                Fss<span>(c: 'Third'),
               ],
             ),
             Fss.ul(
-              fssClass: 'custom',
+              clazz: 'custom',
               children: [
-                Fss.text('With custom text'),
-                Fss.text('Second'),
-                Fss.text('Third'),
+                Fss<span>(c: 'With custom text'),
+                Fss<span>(c: 'Second'),
+                Fss<span>(c: 'Third'),
               ],
             ),
             Fss.ul(
-              fssClass: 'square',
+              clazz: 'square',
               children: [
-                Fss.text('With square icon'),
-                Fss.text('Second'),
-                Fss.text('Third'),
+                Fss<span>(c: 'With square icon'),
+                Fss<span>(c: 'Second'),
+                Fss<span>(c: 'Third'),
               ],
             ),
             Fss.ol(
-              fssClass: 'decimal',
+              clazz: 'decimal',
               children: [
-                Fss.text('With number'),
-                Fss.text('Second'),
-                Fss.text('Third'),
+                Fss<span>(c: 'With number'),
+                Fss<span>(c: 'Second'),
+                Fss<span>(c: 'Third'),
               ],
             ),
             Fss.ol(
-              fssClass: 'roman',
+              clazz: 'roman',
               children: [
-                Fss.text('With roman numbers'),
-                Fss.text('Second'),
-                Fss.text('Third'),
+                Fss<span>(c: 'With roman numbers'),
+                Fss<span>(c: 'Second'),
+                Fss<span>(c: 'Third'),
               ],
             ),
             Fss.ol(
-              fssClass: 'spacing',
+              clazz: 'spacing',
               children: [
-                Fss.text('With custom spacing'),
-                Fss.text('Second'),
-                Fss.text('Third'),
+                Fss<span>(c: 'With custom spacing'),
+                Fss<span>(c: 'Second'),
+                Fss<span>(c: 'Third'),
               ],
             ),
           ],

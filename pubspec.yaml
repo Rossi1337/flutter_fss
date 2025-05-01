@@ -1,13 +1,13 @@
 name: fss
 description: Flutter Style Sheets allows you to style your widgets with a "CSS like" theme file.
-version: 1.0.0
+version: 2.0.0-alpha.1
 homepage: https://github.com/Rossi1337/flutter_fss
 repository: https://github.com/Rossi1337/flutter_fss
 issue_tracker: https://github.com/Rossi1337/flutter_fss/issues
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=1.17.0"
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.2.0"
 
 dependencies:
   flutter:
@@ -16,8 +16,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  lint: 1.7.2
+  lint: 2.8.0
 
 # The following section is specific to Flutter.
 flutter:
   uses-material-design: true
+

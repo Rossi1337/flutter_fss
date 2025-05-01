@@ -31,25 +31,23 @@ void main() {
 ///
 class TestApp extends StatelessWidget {
   /// Constructor
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Defaults Demo',
-      builder: (c, _) => FssTheme.withAppDefaults(
-        context: c,
+      builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         child: Builder(
-          builder: (c) {
-            final FssTheme theme = FssTheme.of(c)!;
-            return Fss.div(
-              fssID: 'bg',
-              child: SingleChildScrollView(
-                // This gives you all the details of the currently used fss theme
-                child: Fss.body(theme.toString(minLevel: DiagnosticLevel.fine)),
-              ),
+          builder: (context) {
+            final theme = FssTheme.of(context)!;
+            // This gives you all the details of the currently used fss theme
+            final dump = theme.toString(minLevel: DiagnosticLevel.fine);
+            return Fss<div>(
+              id: 'bg',
+              c: SingleChildScrollView(child: Fss<body>(c: dump)),
             );
           },
         ),

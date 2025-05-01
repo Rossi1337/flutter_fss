@@ -32,20 +32,15 @@ class DashPathBorder extends Border {
 
   /// Constructor
   const DashPathBorder({
-    BorderSide top = BorderSide.none,
+    super.top,
     this.dashTopArray,
-    BorderSide left = BorderSide.none,
+    super.left,
     this.dashLeftArray,
-    BorderSide right = BorderSide.none,
+    super.right,
     this.dashRightArray,
-    BorderSide bottom = BorderSide.none,
+    super.bottom,
     this.dashBottomArray,
-  }) : super(
-          top: top,
-          left: left,
-          right: right,
-          bottom: bottom,
-        );
+  });
 
   factory DashPathBorder.all({
     BorderSide borderSide = const BorderSide(),

@@ -29,21 +29,20 @@ void main() {
 
 /// Creates a simple app
 class TestApp extends StatelessWidget {
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Simple Demo',
       // Install the theme with the given stylesheet
-      builder: (c, _) => FssTheme.withAppDefaults(
-        context: c,
+      builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         // Add a div with a given "class" and a text with a given "id"
         child: Center(
-          child: Fss.div(
-            fssClass: 'box',
-            child: Fss.text('Hello World', fssID: 'myText'),
+          child: Fss<div>(
+            clazz: 'box',
+            c: Fss<span>(id: 'myText', c: 'Hello World'),
           ),
         ),
       ),

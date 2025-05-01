@@ -92,30 +92,29 @@ void main() {
 /// So you get the styles of the STYLESHEET above.
 class TestApp extends StatelessWidget {
   /// Constructor
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Box Demo',
-      builder: (c, _) => FssTheme.withAppDefaults(
-        context: c,
+      builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         child: GridView.count(
           crossAxisCount: 5,
           padding: const EdgeInsets.all(8),
           children: [
-            Fss.div(fssID: 'box1', child: Fss.text('1')),
-            Fss.div(fssID: 'box2', child: Fss.text('2')),
-            Fss.div(fssID: 'box3', child: Fss.text('3')),
-            Fss.div(fssID: 'box4', child: Fss.text('4')),
-            Fss.div(fssID: 'box5', child: Fss.text('5')),
-            Fss.div(fssID: 'box6', child: Fss.text('6')),
-            Fss.div(fssID: 'box7', child: Fss.text('7')),
-            Fss.div(fssID: 'box8', child: Fss.text('8')),
-            Fss.div(fssID: 'box9', child: Fss.text('9')),
-            Fss.div(fssID: 'box10', child: Fss.text('10')),
+            Fss<div>(id: 'box1', c: '1'),
+            Fss<div>(id: 'box2', c: '2'),
+            Fss<div>(id: 'box3', c: '3'),
+            Fss<div>(id: 'box4', c: '4'),
+            Fss<div>(id: 'box5', c: '5'),
+            Fss<div>(id: 'box6', c: '6'),
+            Fss<div>(id: 'box7', c: '7'),
+            Fss<div>(id: 'box8', c: '8'),
+            Fss<div>(id: 'box9', c: '9'),
+            Fss<div>(id: 'box10', c: '10'),
           ],
         ),
       ),

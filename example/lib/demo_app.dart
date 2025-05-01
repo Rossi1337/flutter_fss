@@ -14,7 +14,7 @@ void main() {
 /// assets and then install it as a theme into the widget tree.
 class TestApp extends StatelessWidget {
   /// Constructor
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -25,48 +25,46 @@ class TestApp extends StatelessWidget {
       // We use the system Theme to set some default styles and rules.
       // This will take over the color theme and fonts of the system.
       // We use a future builder because we load the stylesheet from an asset.
-      builder: (c, _) => FutureBuilder(
-        future: DefaultAssetBundle.of(c).loadString(styleSheetFile),
-        initialData: '',
-        builder: (c, stylesheetAsset) {
+      builder: (context, _) => FutureBuilder(
+        future: DefaultAssetBundle.of(context).loadString(styleSheetFile),
+        builder: (context, stylesheetAsset) {
           if (!stylesheetAsset.hasData) {
             return const CircularProgressIndicator();
           }
 
           return FssTheme.withAppDefaults(
-            context: c,
+            context: context,
             stylesheet: stylesheetAsset.data.toString(),
             // Now we add the widgets of the demo app. A div container and
             // inside some example widgets.
             child: Fss.div(
-              fssClass: 'frame',
-              builder: (c, ap) => SingleChildScrollView(
+              clazz: 'frame',
+              builder: (context, ap) => SingleChildScrollView(
                 child: Column(
                   children: [
                     // Lets add some text with different styles
-                    Fss.h1('H1 - FSS'),
-                    Fss.h2('H2 - FSS with style.'),
-                    Fss.h3('H3 - FSS style your widgets with style.'),
-                    Fss.h4('H4 - FSS style your widgets with style.'),
-                    Fss.h5('H5 - FSS style your widgets with style.'),
-                    Fss.h6('H6 - FSS style your widgets with style.'),
-                    Fss.subtitle1(
-                      'Subtitle1 - FSS style your widgets with style.',
-                    ),
-                    Fss.subtitle2(
-                      'Subtitle1 - FSS style your widgets with style.',
-                    ),
-                    Fss.body('Body - FSS style your widgets with style.'),
-                    Fss.body2('Body2 - FSS style your widgets with style.'),
-                    Fss.caption('Caption - FSS style your widgets with style.'),
+                    Fss<h1>(c: 'H1 - FSS'),
+                    Fss<h2>(c: 'H2 - FSS with style.'),
+                    Fss<h3>(c: 'H3 - FSS style your widgets with style.'),
+                    Fss<h4>(c: 'H4 - FSS style your widgets with style.'),
+                    Fss<h5>(c: 'H5 - FSS style your widgets with style.'),
+                    Fss<h6>(c: 'H6 - FSS style your widgets with style.'),
+                    Fss<subtitle1>(
+                        c: 'Subtitle1 - FSS style your widgets with style.'),
+                    Fss<subtitle2>(
+                        c: 'Subtitle1 - FSS style your widgets with style.'),
+                    Fss<body>(c: 'Body - FSS style your widgets with style.'),
+                    Fss<body2>(c: 'Body2 - FSS style your widgets with style.'),
+                    Fss<caption>(
+                        c: 'Caption - FSS style your widgets with style.'),
                     Fss.hr(),
                     // We also offer a simple list
                     Fss.ol(
-                      fssClass: 'simple',
+                      clazz: 'simple',
                       children: [
-                        Fss.text('A simple styleable list'),
-                        Fss.text('Second'),
-                        Fss.text('Third'),
+                        Fss.span('A simple styleable list'),
+                        Fss.span('Second'),
+                        Fss.span('Third'),
                       ],
                     ),
                     // Here we use a button and configure it from styles.
@@ -76,24 +74,24 @@ class TestApp extends StatelessWidget {
                       builder: (context, styles) => ElevatedButton(
                         onPressed: () => {},
                         style: ElevatedButton.styleFrom(
-                          primary: styles.backgroundColor,
-                          onPrimary: styles.color,
+                          backgroundColor: styles.backgroundColor,
+                          foregroundColor: styles.color,
                         ),
                         child: Text('My Button', style: styles.textStyle),
                       ),
                     ),
 
                     // Finally we add an image. It has the fss class "test"
-                    Fss.img(src: const AssetImage('test.png'), fssID: 'my_img'),
+                    Fss.img(id: 'my_img', src: const AssetImage('test.png')),
 
                     // Screen size proportional sizes
                     Fss.styled(
-                      fssID: 'screen_info',
-                      builder: (context, styles) => Fss.text(
-                        'Size vw/vh: ${styles.getSize(FssProperty.max_width.name)} x '
-                        '${styles.getSize(FssProperty.max_height.name)}'
-                        ' -> 50%: ${styles.getSize(FssProperty.min_width.name)} x '
-                        '${styles.getSize(FssProperty.min_height.name)}',
+                      id: 'screen_info',
+                      builder: (context, styles) => Fss<span>(
+                        c: 'Size vw/vh: ${styles.getSize(FssProperty.max_width.name)} x '
+                            '${styles.getSize(FssProperty.max_height.name)}'
+                            ' -> 50%: ${styles.getSize(FssProperty.min_width.name)} x '
+                            '${styles.getSize(FssProperty.min_height.name)}',
                       ),
                     ),
                   ],

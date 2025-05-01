@@ -5,7 +5,12 @@
 }
 
 /* All headlines will have by default a text shadow */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   text-shadow: .5em 0.5em 0.5em #0c0c0c;
 }
 
@@ -49,11 +54,12 @@ button {
 }
 
 /* We also support media queries. When the app is resized the rules change */
-@media screen (width <= 600px) AND (height <= 1000px)  {
+@media screen AND (width <=600px) AND (height <=1000px) {
 
-/* When the screen is smaller than 600px then change h1 and h2  */
-  h1, h2 {
-    color: rgb(155,0,0);
+  /* When the screen is smaller than 600px then change h1 and h2  */
+  h1,
+  h2 {
+    color: rgb(155, 0, 0);
     font-size: 32px;
   }
 

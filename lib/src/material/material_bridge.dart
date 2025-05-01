@@ -1,8 +1,8 @@
-library material_bridge;
+/// Bridge to translate Material Theme into CSS styles and variables.
+library;
 
 import 'package:flutter/material.dart';
-
-import 'fss_parser.dart';
+import 'package:fss/fss.dart';
 
 /// Parses Material Theme and translates it into some default styles and rules.
 ///
@@ -34,19 +34,19 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       FssProperty.background_color.name,
-      FssColor.colorToHex(themeData.backgroundColor),
+      FssColor.colorToHex(themeData.colorScheme.surface),
     );
     _addVar(
       styles,
       'bottom-appbar-color',
-      FssColor.colorToHex(themeData.bottomAppBarColor),
+      FssColor.colorToHex(themeData.bottomAppBarTheme.color),
     );
     _addVar(styles, 'canvas-color', FssColor.colorToHex(themeData.canvasColor));
     _addVar(styles, 'card-color', FssColor.colorToHex(themeData.cardColor));
     _addVar(
       styles,
       'dialog-background-color',
-      FssColor.colorToHex(themeData.dialogBackgroundColor),
+      FssColor.colorToHex(themeData.dialogTheme.backgroundColor),
     );
     _addVar(
       styles,
@@ -61,7 +61,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'error-color',
-      FssColor.colorToHex(themeData.errorColor),
+      FssColor.colorToHex(themeData.colorScheme.error),
     );
     _addVar(styles, 'focus-color', FssColor.colorToHex(themeData.focusColor));
     _addVar(
@@ -94,7 +94,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'primary-color-brightness',
-      '${themeData.primaryColorBrightness}',
+      '${themeData.brightness}',
     );
     _addVar(
       styles,
@@ -109,14 +109,14 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'selected-row-color',
-      FssColor.colorToHex(themeData.selectedRowColor),
+      FssColor.colorToHex(themeData.textSelectionTheme.selectionColor),
     );
     _addVar(styles, 'shadow-color', FssColor.colorToHex(themeData.shadowColor));
     _addVar(styles, 'splash-color', FssColor.colorToHex(themeData.splashColor));
     _addVar(
       styles,
       'toggleable-active-color',
-      FssColor.colorToHex(themeData.toggleableActiveColor),
+      FssColor.colorToHex(themeData.toggleButtonsTheme.color),
     );
     _addVar(
       styles,
@@ -129,7 +129,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'color-background',
-      FssColor.colorToHex(themeData.colorScheme.background),
+      FssColor.colorToHex(themeData.colorScheme.surface),
     );
     _addVar(
       styles,
@@ -139,7 +139,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'color-onbackground',
-      FssColor.colorToHex(themeData.colorScheme.onBackground),
+      FssColor.colorToHex(themeData.colorScheme.onSurface),
     );
     _addVar(
       styles,
@@ -169,7 +169,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'color-primaryvariant',
-      FssColor.colorToHex(themeData.colorScheme.primaryVariant),
+      FssColor.colorToHex(themeData.colorScheme.primaryContainer),
     );
     _addVar(
       styles,
@@ -179,7 +179,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'color-secondaryvariant',
-      FssColor.colorToHex(themeData.colorScheme.secondaryVariant),
+      FssColor.colorToHex(themeData.colorScheme.secondaryContainer),
     );
     _addVar(
       styles,
@@ -204,14 +204,14 @@ class MaterialThemeBridge {
     _addStyle(
       styles,
       FssProperty.background_color.name,
-      FssColor.colorToHex(themeData.colorScheme.background),
+      FssColor.colorToHex(themeData.colorScheme.surface),
     );
     _addStyle(
       styles,
       FssProperty.color.name,
-      FssColor.colorToHex(themeData.colorScheme.onBackground),
+      FssColor.colorToHex(themeData.colorScheme.onSurface),
     );
-    _translateTextTheme(styles, themeData.textTheme.bodyText1);
+    _translateTextTheme(styles, themeData.textTheme.bodyMedium);
 
     return styles;
   }
@@ -225,24 +225,26 @@ class MaterialThemeBridge {
 
     final List<FssRule> rules = [];
 
-    _addTextRule(FssType.h1.name, themeData.textTheme.headline1, rules);
-    _addTextRule(FssType.h2.name, themeData.textTheme.headline2, rules);
-    _addTextRule(FssType.h3.name, themeData.textTheme.headline3, rules);
-    _addTextRule(FssType.h4.name, themeData.textTheme.headline4, rules);
-    _addTextRule(FssType.h5.name, themeData.textTheme.headline5, rules);
-    _addTextRule(FssType.h6.name, themeData.textTheme.headline6, rules);
+    _addTextRule(FssType.h1.name, themeData.textTheme.headlineLarge, rules);
+    _addTextRule(FssType.h2.name, themeData.textTheme.headlineMedium, rules);
+    _addTextRule(FssType.h3.name, themeData.textTheme.headlineSmall, rules);
+    _addTextRule(FssType.h4.name, themeData.textTheme.bodyLarge, rules);
+    _addTextRule(FssType.h5.name, themeData.textTheme.bodyMedium, rules);
+    _addTextRule(FssType.h6.name, themeData.textTheme.bodySmall, rules);
 
-    _addTextRule(FssType.body.name, themeData.textTheme.bodyText1, rules);
-    _addTextRule(FssType.p.name, themeData.textTheme.bodyText1, rules);
-    _addTextRule(FssType.div.name, themeData.textTheme.bodyText1, rules);
+    _addTextRule(FssType.body.name, themeData.textTheme.bodyMedium, rules);
+    _addTextRule(FssType.p.name, themeData.textTheme.bodyMedium, rules);
+    _addTextRule(FssType.div.name, themeData.textTheme.bodyMedium, rules);
 
     // Add some more non standard elements
-    _addTextRule(FssType.body2.name, themeData.textTheme.bodyText2, rules);
-    _addTextRule(FssType.overline.name, themeData.textTheme.overline, rules);
-    _addTextRule(FssType.caption.name, themeData.textTheme.caption, rules);
-    _addTextRule(FssType.button.name, themeData.textTheme.button, rules);
-    _addTextRule(FssType.subtitle1.name, themeData.textTheme.subtitle1, rules);
-    _addTextRule(FssType.subtitle2.name, themeData.textTheme.subtitle2, rules);
+    _addTextRule(FssType.body2.name, themeData.textTheme.bodyMedium, rules);
+    _addTextRule(FssType.overline.name, themeData.textTheme.labelMedium, rules);
+    _addTextRule(FssType.caption.name, themeData.textTheme.labelSmall, rules);
+    _addTextRule(FssType.button.name, themeData.textTheme.bodyLarge, rules);
+    _addTextRule(
+        FssType.subtitle1.name, themeData.textTheme.headlineLarge, rules);
+    _addTextRule(
+        FssType.subtitle2.name, themeData.textTheme.headlineMedium, rules);
 
     // HR styling
     final dividerTheme = DividerTheme.of(context);
@@ -340,7 +342,7 @@ Map<String, FssPropertyValue> _translateTextTheme(
   _addStyle(
     styles,
     FssProperty.text_decoration_color.name,
-    textTheme.decorationColor?.toString(),
+    FssColor.colorToHex(textTheme.decorationColor),
   );
   _addStyle(
     styles,

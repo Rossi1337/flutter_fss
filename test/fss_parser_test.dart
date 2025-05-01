@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fss/fss.dart';
-import 'package:fss/src/fss_parser.dart';
+import 'package:fss/src/default/fss_html_css.dart';
 
 /// All kind of unit tests for the parser.
 
 void main() {
+  setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  });
+
   // -------------------------------------------------------------
   // Tests for basic parsing functions
   // -------------------------------------------------------------
@@ -627,6 +631,13 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    test('Class with attribute', () {
+      final selector = FssSelector.parse('.class1[attribute1].class2');
+      expect(selector.classes[0], '.class1[attribute1]');
+      expect(selector.classes[1], '.class2');
+    });
+
+    // -------------------------------------------------------------
     test('Simple ID', () {
       final selector = FssSelector.parse('#my_id');
       expect(selector.id, '#my_id');
@@ -661,6 +672,19 @@ void main() {
       expect(selector.classes[0], '.class1');
       expect(selector.classes[1], ':selected');
     });
+
+    test(
+      'Defined on multiple lines',
+      () {
+        const input = '''
+        t1,
+        t2 { 
+          font-size: 32px;
+        } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontSize, 32);
+      },
+    );
   });
 
   // -------------------------------------------------------------
@@ -669,6 +693,11 @@ void main() {
 
   group('Shylesheet methods', () {
     // -------------------------------------------------------------
+    test('Parse default stylesheet', () {
+      final st = FlutterStyleSheet(stylesheet: htmlCss);
+      expect(st.rules.length, greaterThan(0));
+    });
+
     test('Access stylesheet rules', () {
       const input = '''
         test { 

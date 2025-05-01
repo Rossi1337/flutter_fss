@@ -28,10 +28,9 @@ Here a minimum example:
                 builder: (c, _) => FssTheme.withAppDefaults(
                     context: c,
                     stylesheet: styleSheet, // This string contains your stylesheet
-                    child: Fss.div(fssID: 'box1', fssClass: 'box', 
-                    		child: Fss.text('Hello World')),
+                    child: Fss<div>(id: 'box1', clazz: 'box', c: 'Hello World'),
                 ),
-            ));
+            );
         }
     }
 ```
@@ -240,7 +239,7 @@ This uses the same syntax as CSS.
 
 ```css
 /* We also support media queries. When the app is resized the rules change */
-@media screen (width <= 600px) AND (height <= 1000px)  {
+@media screen AND (width <= 600px) AND (height <= 1000px)  {
 
 /* When the screen width is smaller than 600px then change h1 and h2  */
   h1, h2 {
@@ -298,8 +297,8 @@ Here an example of a widget that we assign an ID, type and classes to:
 ```dart
 Fss.box(
   fssType: 'box',
-  fssID: 'mybox22',
-  fssClass: 'with_border header colorful',
+  id: 'mybox22',
+  clazz: 'with_border header colorful',
   child: ...
 )
 ```
@@ -320,15 +319,15 @@ class TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'FSS Inheritance Demo',
-        builder: (c, _) => FssTheme.withAppDefaults(
-              context: c,
+        builder: (context, _) => FssTheme.withAppDefaults(
+              context: context,
               stylesheet: STYLESHEET,
-              child: Fss.div(         // This will be the parent  
-                fssClass: 'mybox',
-                child: ListView(
+              child: Fss<div>(         // This will be the parent  
+                clazz: 'mybox',
+                c: ListView(
                   children: [
-                    Center(child: Fss.text('Test 1', fssID: 'text1')),
-                    Fss.text('Test 2', fssID: 'text2'),
+                    Center(child: Fss<span>(id: 'text1', c: 'Test 1')),
+                    Fss<span>(id: 'text2', c: 'Test 2' ),
                   ],
                 ),
               ),
@@ -363,8 +362,8 @@ class TestApp extends StatelessWidget {
     FssRuleBlock myStyles = resolveApplicableStyles(
        context: context,
        fssType: 'myWidget',
-       fssId: 'myID',
-       fssClass: 'box darker my_style',
+       id: 'myID',
+       clazz: 'box darker my_style',
     );
     var myTextColor = myStyles.textStyle.color;
     ...
@@ -480,7 +479,7 @@ Example: `content-visibility: hidden;`
 Allowed values:   
 Initial value: 
 
-Example: ``  
+Example: `accent-color: #caffee;`  
 
 ----
 ##### background-color
@@ -489,7 +488,8 @@ Example: ``
 Allowed values:   
 Initial value: 
 
-Example: ``  
+Example: `background-color: #caffee;`  
+
 
 ----
 ##### background-image
@@ -498,7 +498,8 @@ Example: ``
 Allowed values:   
 Initial value: 
 
-Example: ``  
+Example: `background-image: url(https://example.com/image.png);`  
+
 
 ----
 ##### background-position

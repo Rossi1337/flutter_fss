@@ -20,24 +20,29 @@ void main() {
 /// So you get the styles of the STYLESHEET above.
 class TestApp extends StatelessWidget {
   /// Constructor
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Custom Demo',
-      builder: (c, _) => FssTheme.withAppDefaults(
-        context: c,
+      builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        child: Fss.styled(
-          // Via the FssWidgetBuilder we have access to the styles.
-          builder: (context, applicableStyles) {
-            return Text(
-              'Hello World',
-              style: TextStyle(color: applicableStyles.color),
-            );
-          },
+        child: Column(
+          children: [
+            Fss.styled(
+              // Via the FssWidgetBuilder we have access to the styles.
+              builder: (context, applicableStyles) {
+                return Text(
+                  'Hello World',
+                  style: TextStyle(color: applicableStyles.color),
+                );
+              },
+            ),
+            const MyWidget(),
+            const MyWidget2(),
+          ],
         ),
       ),
     );
@@ -47,7 +52,7 @@ class TestApp extends StatelessWidget {
 /// This example shows you how to access the styles by inheriting from FssWidget
 class MyWidget extends FssWidget {
   /// Constructor
-  const MyWidget({Key? key}) : super(key: key);
+  const MyWidget({super.key});
 
   /// You just need to implement this method where you have access to the styles.
   @override
@@ -63,7 +68,7 @@ class MyWidget extends FssWidget {
 /// This can be used anywhere, where you have access to an BuildContext
 class MyWidget2 extends StatelessWidget {
   /// Constructor
-  const MyWidget2({Key? key}) : super(key: key);
+  const MyWidget2({super.key});
 
   /// Build method
   @override
@@ -72,8 +77,8 @@ class MyWidget2 extends StatelessWidget {
     final myStyles = resolveApplicableStyles(
       context: context,
       fssType: 'myWidget',
-      fssId: 'myID',
-      fssClass: 'box darker my_style',
+      id: 'myID',
+      clazz: 'box darker my_style',
     );
 
     return Text(

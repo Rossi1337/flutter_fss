@@ -100,37 +100,36 @@ void main() {
 /// So you get the styles of the STYLESHEET above.
 class TestApp extends StatelessWidget {
   /// Constructor
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Border Demo',
-      builder: (c, _) => FssTheme.withAppDefaults(
-        context: c,
+      builder: (context, _) => FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         child: GridView.count(
           crossAxisCount: 5,
           padding: const EdgeInsets.all(8),
           children: [
-            Fss.div(fssID: 'box1', child: Fss.text('solid')),
-            Fss.div(fssID: 'box2', child: Fss.text('dashed')),
-            Fss.div(fssID: 'box3', child: Fss.text('dotted')),
-            Fss.div(fssID: 'box4', child: Fss.text('hidden')),
-            Fss.div(fssID: 'box5', child: Fss.text('top')),
-            Fss.div(fssID: 'box6', child: Fss.text('bottom')),
-            Fss.div(fssID: 'box7', child: Fss.text('left')),
-            Fss.div(fssID: 'box8', child: Fss.text('right')),
-            Fss.div(fssID: 'box9', child: Fss.text('top bottom')),
-            Fss.div(fssID: 'box10', child: Fss.text('left right')),
-            Fss.div(fssID: 'box11', child: Fss.text('radius solid')),
-            Fss.div(fssID: 'box12', child: Fss.text('radius dashed')),
-            Fss.div(fssID: 'box13', child: Fss.text('radius dotted')),
-            Fss.div(fssID: 'box14', child: Fss.text('radius hidden')),
-            Fss.div(fssID: 'box15', child: Fss.text('mixed')),
-            Fss.div(fssID: 'box16', child: Fss.text('inset')),
-            Fss.div(fssID: 'box17', child: Fss.text('outset')),
+            Fss<div>(id: 'box1', c: 'solid'),
+            Fss<div>(id: 'box2', c: 'dashed'),
+            Fss<div>(id: 'box3', c: 'dotted'),
+            Fss<div>(id: 'box4', c: 'hidden'),
+            Fss<div>(id: 'box5', c: 'top'),
+            Fss<div>(id: 'box6', c: 'bottom'),
+            Fss<div>(id: 'box7', c: 'left'),
+            Fss<div>(id: 'box8', c: 'right'),
+            Fss<div>(id: 'box9', c: 'top bottom'),
+            Fss<div>(id: 'box10', c: 'left right'),
+            Fss<div>(id: 'box11', c: 'radius solid'),
+            Fss<div>(id: 'box12', c: 'radius dashed'),
+            Fss<div>(id: 'box13', c: 'radius dotted'),
+            Fss<div>(id: 'box14', c: 'radius hidden'),
+            Fss<div>(id: 'box15', c: 'mixed'),
+            Fss<div>(id: 'box16', c: 'inset'),
+            Fss<div>(id: 'box17', c: 'outset'),
           ],
         ),
       ),
