@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fss/src/parser/fss_base.dart';
 import 'package:fss/src/parser/fss_parser.dart';

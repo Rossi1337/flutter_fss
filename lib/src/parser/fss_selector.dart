@@ -109,9 +109,9 @@ class FssSelector {
 
   /// Parses a selector string and returns a [FssSelector] object.
   /// The selector string can contain a type, an id and a list of classes.
-  factory FssSelector.parse(String path) {
+  factory FssSelector.parse(String selectorPath) {
     // We expect here a single selector. So splitting by "," should to be done already
-    path = path.trim().toLowerCase();
+    final path = selectorPath.trim().toLowerCase();
 
     //for example: p h1  or p > h1 or p + h1
     if (path.contains(' ') ||
