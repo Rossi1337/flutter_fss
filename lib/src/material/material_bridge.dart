@@ -19,7 +19,8 @@ class MaterialThemeBridge {
   /// This will mainly set the default colors and fonts.
   /// Additionally we set many material design related variables e.g.:
   /// --mat-color-primary, --mat-color-background ... which you can use then in
-  /// your own rules via the var() function.
+  /// your own rules via the var() function. They are prefixed with "mat-" to avoid
+  /// conflicts with other variables.
   ///
   /// Used to initialize the defaults for [FlutterStyleSheet]
   ///
@@ -74,7 +75,7 @@ class MaterialThemeBridge {
     _addVar(
       styles,
       'indicator-color',
-      FssColor.colorToHex(themeData.indicatorColor),
+      FssColor.colorToHex(themeData.tabBarTheme.indicatorColor),
     );
     _addVar(
       styles,
@@ -374,7 +375,7 @@ String? _translateFontWeight(FontWeight? fontWeight) {
   if (fontWeight == null) {
     return null;
   }
-  switch (fontWeight.index + 1) {
+  switch (fontWeight.value + 1) {
     case 4:
       return 'normal';
     case 7:
@@ -384,7 +385,7 @@ String? _translateFontWeight(FontWeight? fontWeight) {
     case 3:
       return 'lighter';
     default:
-      return '${(fontWeight.index + 1) * 100}';
+      return '${(fontWeight.value + 1) * 100}';
   }
 }
 
