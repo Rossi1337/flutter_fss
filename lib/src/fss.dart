@@ -296,8 +296,8 @@ class _FssBuilder extends FssWidget {
 FssRuleBlock resolveApplicableStyles({
   required BuildContext context,
   String? fssType,
-  String? id,
-  String? clazz,
+  String? fssID,
+  String? fssClass,
   Map<String, String> attributes = const {},
 }) {
   final stylesheet = FssTheme.of(context);
@@ -314,8 +314,8 @@ FssRuleBlock resolveApplicableStyles({
   final parentStyles = FssParent.of(context);
 
   return stylesheet.resolveStyles(
-    matchId: id ?? '',
-    matchClasses: clazz ?? '',
+    matchId: fssID ?? '',
+    matchClasses: fssClass ?? '',
     matchType: fssType ?? '',
     parentStyles: parentStyles,
     attributes: attributes,

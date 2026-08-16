@@ -42,8 +42,8 @@ abstract class FssWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final applicableStyles = resolveApplicableStyles(
       context: context,
-      clazz: fssClass,
-      id: getIDForResolve(),
+      fssClass: fssClass,
+      fssID: getIDForResolve(),
       fssType: fssType,
     );
 

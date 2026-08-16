@@ -77,8 +77,8 @@ class MyWidget2 extends StatelessWidget {
     final myStyles = resolveApplicableStyles(
       context: context,
       fssType: 'myWidget',
-      id: 'myID',
-      clazz: 'box darker my_style',
+      fssID: 'myID',
+      fssClass: 'box darker my_style',
     );
 
     return Text(
