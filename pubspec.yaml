@@ -15,8 +15,8 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
-    sdk: flutter
-  lint: 2.8.0
+    sdk: flutter  
+  flutter_lints: ^6.0.0
 
 # The following section is specific to Flutter.
 flutter:
