@@ -42,6 +42,20 @@ class FssTheme extends InheritedWidget {
           strict: strict,
         );
 
+  /// Creates a theme from an already parsed stylesheet.
+  ///
+  /// This constructor does not parse anything. To keep the stylesheet
+  /// instance stable across rebuilds construct the [FlutterStyleSheet] once
+  /// (for example in the state of a stateful widget) and pass the same
+  /// instance on every rebuild. This avoids re-parsing the stylesheet and
+  /// keeps all resolved styles alive. In that case [updateShouldNotify]
+  /// will also suppress rebuilds of the fss widget subtree.
+  const FssTheme.fromStylesheet({
+    super.key,
+    required this.stylesheet,
+    required super.child,
+  });
+
   // Creates a theme with some system defaults derived from the Material Theme
   // Additionally this will add variables and some default rules.
   factory FssTheme.withAppDefaults({
@@ -148,8 +162,12 @@ class FssTheme extends InheritedWidget {
     );
   }
 
+  /// Only notifies when the [stylesheet] instance changed. If the same
+  /// [FlutterStyleSheet] instance is reused on a rebuild (see
+  /// [FssTheme.fromStylesheet]) the fss widget subtree is not rebuilt.
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) => true;
+  bool updateShouldNotify(covariant FssTheme oldWidget) =>
+      oldWidget.stylesheet != stylesheet;
 
   /// Resolves and merges all the rules that match the given classes list, type
   /// and FSS ID. All matching rules will be processed and merged into a final

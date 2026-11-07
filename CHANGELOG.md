@@ -15,6 +15,15 @@ Complete internal restructuring. Adding support for more CSS attributes and fixi
   Pass `strict: true` to get the legacy throwing behaviour back.
   Structural errors like unbalanced brackets are always reported and
   now carry line and column information.
+* Added the `FssTheme.fromStylesheet` constructor that takes an already
+  parsed `FlutterStyleSheet` instead of a string. Build the stylesheet
+  once and reuse the same instance on every rebuild to avoid re-parsing
+  the stylesheet and to keep resolved styles alive.
+* `FssTheme` now only rebuilds its fss widget subtree when the stylesheet
+  instance actually changed instead of on every rebuild.
+* Performance: resolved property values are now memoized per rule block
+  (`get`, `getSize`, `getColor` and the composite getters like `textStyle`,
+  `margin`, `border`, ...). Property lookup by name is O(1) now.
 
 ## 1.0.0
 
