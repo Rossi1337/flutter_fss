@@ -942,12 +942,8 @@ class FssRuleBlock {
         );
       }
     }
-    // Interpolate missing values
-    if (stops.isNotEmpty && stops[0] == -1) stops[0] = 0;
-    if (stops.isNotEmpty && stops[stops.length - 1] == -1) {
-      stops[stops.length - 1] = 1.0;
-    }
-    // TODO interpolate values if -1
+    // Fill in the missing stop positions (-1 placeholders).
+    final filledStops = _fillGradientStops(stops);
 
     // Where do we get the actual size from
     // const width = 100.0;
@@ -961,7 +957,7 @@ class FssRuleBlock {
 
     return RadialGradient(
       colors: colors,
-      stops: stops,
+      stops: filledStops,
       radius: radius,
     );
   }
