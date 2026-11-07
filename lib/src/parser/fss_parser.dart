@@ -195,8 +195,7 @@ class _FssParser {
   ///
   /// Returns the position just after the matching closing bracket.
   int _skipAtRuleBlock(String prelude, int openIdx) {
-    _recover('Skipped unsupported at rule: "${prelude.trim()}"',
-        at: openIdx);
+    _recover('Skipped unsupported at rule: "${prelude.trim()}"', at: openIdx);
     int depth = 1;
     int pos = openIdx + 1;
     while (depth > 0) {
@@ -409,8 +408,8 @@ String _stripComments(String input) {
       if (d == '*') {
         // A block comment. Keep line breaks so line numbers stay valid.
         i += 2;
-        while (i < n &&
-            !(input[i] == '*' && i + 1 < n && input[i + 1] == '/')) {
+        while (
+            i < n && !(input[i] == '*' && i + 1 < n && input[i + 1] == '/')) {
           if (input[i] == '\n') {
             out.write('\n');
           }

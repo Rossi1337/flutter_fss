@@ -40,8 +40,8 @@ class FlutterStyleSheet {
       _rules.addAll(rules);
     }
     // Add everything from the style sheet
-    _rules.addAll(parseStylesheet(stylesheet,
-        strict: strict, warnings: parseWarnings));
+    _rules.addAll(
+        parseStylesheet(stylesheet, strict: strict, warnings: parseWarnings));
   }
 
   /// Resolves and merges all the rules that match the given classes string and

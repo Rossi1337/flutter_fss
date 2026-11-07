@@ -744,8 +744,7 @@ void main() {
 
     // -------------------------------------------------------------
     test('Parse multiple rules on one line', () {
-      final styles =
-          parseStylesheet('t1 { color: red; } t2 { color: blue; }');
+      final styles = parseStylesheet('t1 { color: red; } t2 { color: blue; }');
       expect(styles.length, 2);
       expect(styles[0].properties.color, const Color(0xffff0000));
       expect(styles[1].properties.color, const Color(0xff0000ff));
@@ -890,8 +889,7 @@ void main() {
 
     // -------------------------------------------------------------
     test('Vendor prefix is stripped', () {
-      final styles =
-          parseStylesheet('test { -webkit-text-stroke: 2px blue; }');
+      final styles = parseStylesheet('test { -webkit-text-stroke: 2px blue; }');
       expect(styles.first.properties.textStyle?.foreground?.strokeWidth, 2);
     });
 
