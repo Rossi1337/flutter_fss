@@ -917,11 +917,62 @@ String replaceContent(FssPropertyValue? contentMode, String input) {
         // TODO get this from "quote"
         result = '"';
       default:
-        // TODO content "string" needs to be decoded properly
-        result = contentMode.value;
+        // The value is a quoted string that needs to be decoded.
+        result = _decodeContentString(contentMode.value);
     }
   }
   return result;
+}
+
+/// Decode a content string value: strip the surrounding quotes and decode
+/// CSS escape sequences.
+///
+/// A string like `"Say \"hi\""` decodes to `Say "hi"`.
+String _decodeContentString(String value) {
+  // Only decode if it is a quoted string.
+  if (value.length < 2) {
+    return value;
+  }
+  final first = value[0];
+  final last = value[value.length - 1];
+  final isQuoted = (first == '"' || first == "'") && first == last;
+  if (!isQuoted) {
+    return value;
+  }
+  final body = value.substring(1, value.length - 1);
+  final result = StringBuffer();
+  var i = 0;
+  while (i < body.length) {
+    final c = body[i];
+    if (c == '\\' && i + 1 < body.length) {
+      final next = body[i + 1];
+      // Hex escape: \[0-9a-fA-F]{1,6}, optionally followed by a space.
+      if (RegExp(r'[0-9a-fA-F]').hasMatch(next)) {
+        var hex = '';
+        var j = i + 1;
+        while (j < body.length &&
+            hex.length < 6 &&
+            RegExp(r'[0-9a-fA-F]').hasMatch(body[j])) {
+          hex += body[j];
+          j++;
+        }
+        // A space directly after a hex escape is part of the escape.
+        if (j < body.length && (body[j] == ' ' || body[j] == '\n')) {
+          j++;
+        }
+        result.write(String.fromCharCode(int.parse(hex, radix: 16)));
+        i = j;
+      } else {
+        // Simple escape like \n, \t, \" or \\\\ — keep the character.
+        result.write(next);
+        i += 2;
+      }
+    } else {
+      result.write(c);
+      i++;
+    }
+  }
+  return result.toString();
 }
 
 /// Parses a gradient direction value.

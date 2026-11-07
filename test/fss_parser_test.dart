@@ -569,6 +569,58 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    test('Parse content string', () {
+      const input = '''
+        test { 
+          content: "hello world";
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.transformText(''), 'hello world');
+    });
+
+    // -------------------------------------------------------------
+    test('Parse content string with escaped quote', () {
+      const input = '''
+        test { 
+          content: "say \\"hi\\"";
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.transformText(''), 'say "hi"');
+    });
+
+    // -------------------------------------------------------------
+    test('Parse content string with backslash escape', () {
+      const input = '''
+        test { 
+          content: "a\\\\b";
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.transformText(''), 'a\\b');
+    });
+
+    // -------------------------------------------------------------
+    test('Parse content string with simple escape', () {
+      const input = '''
+        test { 
+          content: "line\\nbreak";
+        } ''';
+      // In CSS (unlike JS) a simple escape like \n drops the backslash
+      // and keeps the character, so this is not a line break.
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.transformText(''), 'linenbreak');
+    });
+
+    // -------------------------------------------------------------
+    test('Parse content string with hex escape', () {
+      const input = '''
+        test { 
+          content: "\\201c";
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.transformText(''), '\u201c');
+    });
+
+    // -------------------------------------------------------------
     test('Parse visibility', () {
       const input = '''
         test { 
