@@ -144,7 +144,11 @@ enum FssProperty {
     return FssRuleBlock(initialProps);
   }
 
+  /// Lookup of all properties by name. Built once so that [byName] is O(1).
+  static final Map<String, FssProperty> _nameMap = {
+    for (final prop in FssProperty.values) prop.name: prop,
+  };
+
   /// Gets a property by its name.
-  static FssProperty? byName(String name) =>
-      FssProperty.values.where((p) => p.name == name).firstOrNull;
+  static FssProperty? byName(String name) => _nameMap[name];
 }

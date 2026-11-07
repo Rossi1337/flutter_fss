@@ -13,7 +13,6 @@ import 'package:fss/src/parser/fss_size.dart';
 /// This will be used for parsing a rule but also to merge and inherit
 /// properties into an "applicable rule block" when resolving all rules for a
 /// given element.
-@immutable
 class FssRuleBlock {
   /// Constructs a rule from the given properties.
   FssRuleBlock(
@@ -31,11 +30,47 @@ class FssRuleBlock {
   final FssRuleBlock? _initialValues;
   final FssRuleBlock? _parent;
 
+  // -- Memoization ----------------------------------------------------------
+  // Derived values are computed once per block. The block contents are
+  // effectively immutable once resolved, [update] is the only mutating
+  // entry point and it invalidates all caches.
+
+  /// Cache of the results of [get].
+  Map<String, FssPropertyValue?>? _getCache;
+
+  /// Cache of the results of [getSize].
+  Map<String, double?>? _sizeCache;
+
+  /// Cache of the results of [getColor].
+  Map<String, Color?>? _colorCache;
+
+  /// All registered lazily computed values so that they can be invalidated
+  /// by [update].
+  final List<_LazyValue> _lazies = [];
+
+  _LazyValue<FssBase>? _baselineLazy;
+
+  _LazyValue<EdgeInsetsGeometry?>? _marginLazy;
+  _LazyValue<EdgeInsetsGeometry?>? _paddingLazy;
+  _LazyValue<BoxConstraints?>? _constraintsLazy;
+  _LazyValue<TextStyle?>? _textStyleLazy;
+  _LazyValue<BoxBorder?>? _borderLazy;
+  _LazyValue<BorderRadiusGeometry?>? _borderRadiusLazy;
+  _LazyValue<BoxShadow?>? _boxShadowLazy;
+  _LazyValue<Gradient?>? _backgroundGradientLazy;
+  _LazyValue<DecorationImage?>? _backgroundImageLazy;
+  _LazyValue<Matrix4?>? _transformMatrixLazy;
+
   Color? get color => getColor(FssProperty.color.name);
 
   Color? get backgroundColor => getColor(FssProperty.background_color.name);
 
   DecorationImage? get backgroundImage {
+    _backgroundImageLazy ??= _LazyValue(_lazies, _computeBackgroundImage);
+    return _backgroundImageLazy!.value;
+  }
+
+  DecorationImage? _computeBackgroundImage() {
     final imagePath = get(FssProperty.background_image.name);
     // TODO support multiple images and merge them into a DecorationImage.
     // Maybe support effects via BackdropFilter widget
@@ -79,6 +114,11 @@ class FssRuleBlock {
   }
 
   Gradient? get backgroundGradient {
+    _backgroundGradientLazy ??= _LazyValue(_lazies, _computeBackgroundGradient);
+    return _backgroundGradientLazy!.value;
+  }
+
+  Gradient? _computeBackgroundGradient() {
     final imageDef = get(FssProperty.background_image.name);
     if (imageDef == null) {
       return null;
@@ -100,6 +140,11 @@ class FssRuleBlock {
   }
 
   BoxBorder? get border {
+    _borderLazy ??= _LazyValue(_lazies, _computeBorder);
+    return _borderLazy!.value;
+  }
+
+  BoxBorder? _computeBorder() {
     final topSide = getBorderSide('top');
     final bottomSide = getBorderSide('bottom');
     final leftSide = getBorderSide('left');
@@ -148,6 +193,11 @@ class FssRuleBlock {
   }
 
   BorderRadiusGeometry? get borderRadius {
+    _borderRadiusLazy ??= _LazyValue(_lazies, _computeBorderRadius);
+    return _borderRadiusLazy!.value;
+  }
+
+  BorderRadiusGeometry? _computeBorderRadius() {
     final tl = getSize(FssProperty.border_top_left_radius.name);
     final tr = getSize(FssProperty.border_top_right_radius.name);
     final br = getSize(FssProperty.border_bottom_right_radius.name);
@@ -168,6 +218,11 @@ class FssRuleBlock {
   String get display => getString(FssProperty.display.name) ?? 'inline';
 
   TextStyle? get textStyle {
+    _textStyleLazy ??= _LazyValue(_lazies, _computeTextStyle);
+    return _textStyleLazy!.value;
+  }
+
+  TextStyle? _computeTextStyle() {
     Color? color = getColor(FssProperty.color.name);
 
     FssPropertyValue? propValue;
@@ -267,6 +322,11 @@ class FssRuleBlock {
       combineAlignment(textAlign, verticalAlign);
 
   BoxShadow? get boxShadow {
+    _boxShadowLazy ??= _LazyValue(_lazies, _computeBoxShadow);
+    return _boxShadowLazy!.value;
+  }
+
+  BoxShadow? _computeBoxShadow() {
     final value = get(FssProperty.box_shadow.name);
     return value == null ? null : _parseBoxShadow(value, _getBaseline());
   }
@@ -308,7 +368,12 @@ class FssRuleBlock {
   double? get maxWidth => getSize(FssProperty.max_width.name);
   double? get minWidth => getSize(FssProperty.min_width.name);
 
-  BoxConstraints? get constraints => maxHeight == null &&
+  BoxConstraints? get constraints {
+    _constraintsLazy ??= _LazyValue(_lazies, _computeConstraints);
+    return _constraintsLazy!.value;
+  }
+
+  BoxConstraints? _computeConstraints() => maxHeight == null &&
           minHeight == null &&
           maxWidth == null &&
           minWidth == null
@@ -324,6 +389,11 @@ class FssRuleBlock {
   double? get height => getSize(FssProperty.height.name);
 
   EdgeInsetsGeometry? get margin {
+    _marginLazy ??= _LazyValue(_lazies, _computeMargin);
+    return _marginLazy!.value;
+  }
+
+  EdgeInsetsGeometry? _computeMargin() {
     final top = getSize(FssProperty.margin_top.name);
     final left = getSize(FssProperty.margin_left.name);
     final bottom = getSize(FssProperty.margin_bottom.name);
@@ -339,6 +409,11 @@ class FssRuleBlock {
   }
 
   EdgeInsetsGeometry? get padding {
+    _paddingLazy ??= _LazyValue(_lazies, _computePadding);
+    return _paddingLazy!.value;
+  }
+
+  EdgeInsetsGeometry? _computePadding() {
     final top = getSize(FssProperty.padding_top.name);
     final left = getSize(FssProperty.padding_left.name);
     final bottom = getSize(FssProperty.padding_bottom.name);
@@ -354,6 +429,11 @@ class FssRuleBlock {
   }
 
   Matrix4? get transformMatrix {
+    _transformMatrixLazy ??= _LazyValue(_lazies, _computeTransformMatrix);
+    return _transformMatrixLazy!.value;
+  }
+
+  Matrix4? _computeTransformMatrix() {
     final transDef = getString(FssProperty.transform.name);
     if (transDef == null || transDef == 'none') {
       return null;
@@ -488,6 +568,17 @@ class FssRuleBlock {
   }
 
   FssPropertyValue? get(String prop) {
+    final cache = _getCache;
+    if (cache != null && cache.containsKey(prop)) {
+      return cache[prop];
+    }
+    final value = _resolveProperty(prop);
+    _getCache ??= {};
+    _getCache![prop] = value;
+    return value;
+  }
+
+  FssPropertyValue? _resolveProperty(String prop) {
     var lookup = _properties[prop];
 
     final propDef = FssProperty.byName(prop);
@@ -526,18 +617,30 @@ class FssRuleBlock {
   String? getString(String prop) => get(prop)?.value;
 
   double? getSize(String prop) {
+    final cache = _sizeCache;
+    if (cache != null && cache.containsKey(prop)) {
+      return cache[prop];
+    }
     final propValue = get(prop);
-    return propValue == null
+    final size = propValue == null
         ? null
         : parseSizeDef(propValue).getPixelSize(_getBaseline());
+    _sizeCache ??= {prop: size};
+    return size;
   }
 
   Color? getColor(String prop) {
+    final cache = _colorCache;
+    if (cache != null && cache.containsKey(prop)) {
+      return cache[prop];
+    }
     var propValue = get(prop);
     if (propValue != null && propValue.value == 'currentcolor') {
       propValue = get(FssProperty.color.name);
     }
-    return propValue == null ? null : parseColorDef(propValue);
+    final color = propValue == null ? null : parseColorDef(propValue);
+    _colorCache ??= {prop: color};
+    return color;
   }
 
   @override
@@ -584,9 +687,21 @@ class FssRuleBlock {
   void update(Map<String, FssPropertyValue> properties) {
     // TODO implement a merge mode?
     _properties.addAll(properties);
+    // Invalidate all memoized values, they are stale now.
+    _getCache = null;
+    _sizeCache = null;
+    _colorCache = null;
+    for (final lazy in _lazies) {
+      lazy.reset();
+    }
   }
 
   FssBase _getBaseline() {
+    _baselineLazy ??= _LazyValue(_lazies, _computeBaseline);
+    return _baselineLazy!.value;
+  }
+
+  FssBase _computeBaseline() {
     final emBase = _parent?.getSize(FssProperty.font_size.name);
     final remBase = _initialValues?.getSize(FssProperty.font_size.name);
 
@@ -890,5 +1005,33 @@ class FssRuleBlock {
     parts.sort();
     final dir = parts.fold('', (prev, next) => '$prev $next').trim();
     return parseGradientTo(dir);
+  }
+}
+
+/// Lazily computes a value once and caches it.
+///
+/// Registered values are held in the owner list so that they can be
+/// invalidated in a batch.
+class _LazyValue<T> {
+  _LazyValue(List<_LazyValue> owner, this._compute) {
+    owner.add(this);
+  }
+
+  final T Function() _compute;
+
+  bool _resolved = false;
+  Object? _stored;
+
+  T get value {
+    if (!_resolved) {
+      _stored = _compute();
+      _resolved = true;
+    }
+    return _stored as T;
+  }
+
+  void reset() {
+    _stored = null;
+    _resolved = false;
   }
 }
