@@ -44,123 +44,447 @@ Alignment convertDegreeToAlignment(double degree) {
 ///
 /// Normally you would not use this method directly but access the rules
 /// via a [FlutterStyleSheet] which will manage the rule resolving for you.
-List<FssRule> parseStylesheet(String? input) {
+///
+/// The input can use any layout. Both the classic multi line "pretty"
+/// style and minified single line files are supported. Comments can be
+/// either `// line` or `/* block */` style.
+///
+/// [strict] controls how recoverable problems are handled. When `true`
+/// (the legacy behaviour) an [FssParseException] is thrown for unknown
+/// properties, invalid declarations and unsupported selectors. When
+/// `false` (the default) such declarations or whole rules are skipped
+/// and a description is appended to [warnings] (if non null).
+///
+/// Structural errors such as unbalanced brackets are always reported
+/// with an [FssParseException] carrying line and column information.
+List<FssRule> parseStylesheet(
+  String? input, {
+  bool strict = false,
+  List<String>? warnings,
+}) {
   // Nothing to parse
   if (input == null || input.trim().isEmpty) {
     return [];
   }
+  return _FssParser(_stripComments(input), strict, warnings).parse();
+}
 
-  final List<FssRule> result = [];
-  FssRuleBlock? currentBlock;
-  List<String> selectorPathList = [];
-  String partialSelector = '';
-  List<String> mediaRulesList = [];
-  List<FssRule> collectList = result;
-  bool inBlockComment = false;
+/// A small character based tokenizer and parser for the FSS stylesheet
+/// language.
+///
+/// It works on the comment free input and is independent of the line
+/// layout of the file. All structural characters are only considered
+/// outside of string literals and at bracket depth 0.
+class _FssParser {
+  _FssParser(this._input, this.strict, this.warnings);
 
-  final lines = input.split(RegExp(r'[\r\n]+'));
-  int lineNo = -1;
-  for (var line in lines) {
-    lineNo++;
-    if (line.contains('/*')) {
-      inBlockComment = !line.contains('*/');
-      line = line.substring(0, line.indexOf('/*'));
-    }
-    if (inBlockComment && line.contains('*/')) {
-      line = line.substring(line.indexOf('*/') + 2);
-      inBlockComment = false;
-    }
-    line = line.trim();
+  final String _input;
+  final bool strict;
+  final List<String>? warnings;
 
-    // Skip empty lines and // commented lines
-    if (line.isEmpty || line.startsWith('//') || inBlockComment) continue;
+  final List<FssRule> _rules = [];
+  List<String>? _mediaQueries; // open @media queries (null = not inside one)
+  List<FssRule>? _mediaRules; // rules collected for the open @media block
 
-    // The first line that we find defines the path of the style
-    // Can have a bracket on the end of the line or not.
-    // Example field.myfield highlight {
-    if (currentBlock == null) {
-      // media query blocks
-      if (line.toLowerCase().startsWith('@media')) {
-        final mediaQuery = line.indexOf('{') > 0
-            ? line.substring(0, line.indexOf('{')).trim()
-            : line;
-        mediaRulesList = mediaQuery.split(',');
-        collectList = [];
-        continue;
-      }
-      if (line == '{') continue;
-      if (line == '}') {
-        final List<FssRule> subRules = [];
-        collectList.forEach(subRules.add);
-        for (final mq in mediaRulesList) {
-          result.add(FssMediaRule(mq, subRules));
+  /// Parses the whole stylesheet and returns the list of rules.
+  List<FssRule> parse() {
+    int pos = 0;
+    while (pos < _input.length) {
+      final (int idx, String? ch) = _nextStructural(pos, const ['{', '}', ';']);
+      final prelude = _input.substring(pos, idx).trim();
+      if (ch == null) {
+        if (prelude.isNotEmpty) {
+          throw FssParseException(
+            'Unexpected end of stylesheet at ${_loc(idx)}, expected "{" or '
+            '"}" before end of file.\nLast content: "$prelude"',
+          );
         }
-        collectList = result;
+        break;
       }
-      // media query end
-
-      // Start of a rule
-
-      // Selector on multiple lines?
-      if (line.endsWith(',')) {
-        partialSelector += line;
-        continue;
-      }
-
-      var selectorPath = line.indexOf('{') > 0
-          ? line.substring(0, line.indexOf('{')).trim()
-          : line;
-      if (partialSelector.isNotEmpty) {
-        // combine the partial selector with the current selector
-        selectorPath = partialSelector + selectorPath;
-        partialSelector = '';
-      }
-      selectorPathList = selectorPath.split(',');
-
-      currentBlock = FssRuleBlock(const {});
-    } // So we are inside of a style definition.
-    else {
-      // Bracket on next line and not at the end of a style path
-      if (line == '{') continue;
-      // End Bracket so close style
-      if (line == '}') {
-        for (final path in selectorPathList) {
-          final FssSelector selector = FssSelector.parse(path);
-          collectList.add(FssRule(selector, currentBlock));
+      if (ch == ';') {
+        // A top level statement without a block. Only at statements like
+        // "@import url(...);" occur in real CSS and they are unsupported.
+        if (prelude.isNotEmpty) {
+          _recover('Skipped unsupported top level statement: "$prelude"',
+              at: idx);
         }
-        currentBlock = null;
+        pos = idx + 1;
         continue;
       }
-      final nameValue = line.split(':');
-      if (nameValue.length < 2) {
+      if (ch == '}') {
+        if (_mediaQueries == null) {
+          throw FssParseException(
+            'Unexpected "}" at ${_loc(idx)}, there is no open rule to close.',
+          );
+        }
+        _closeMedia();
+        pos = idx + 1;
+        continue;
+      }
+      // ch == '{'
+      if (prelude.isEmpty) {
         throw FssParseException(
-            'Invalid property definition at line $lineNo: "$line"');
+          'Unexpected "{" at ${_loc(idx)}, expected a selector before it.',
+        );
       }
-      final name = nameValue[0].trim();
-      var valueDef = nameValue[1].trim();
-      // Cut the ending ;
-      valueDef = valueDef.endsWith(';')
-          ? valueDef.substring(0, valueDef.length - 1)
-          : valueDef;
+      pos = _parseBlock(prelude, idx);
+    }
+    if (_mediaQueries != null) {
+      throw FssParseException(
+        'Unexpected end of stylesheet at ${_loc(_input.length)}, expected '
+        '"}" to close the media block.',
+      );
+    }
+    return _rules;
+  }
 
-      parseFssRule(currentBlock, name, valueDef, lineNo);
+  /// Handles a block starting at the "{" at position [openIdx].
+  ///
+  /// Returns the position just after the closing bracket of the block
+  /// or just after the opening bracket in case of media blocks.
+  int _parseBlock(String prelude, int openIdx) {
+    if (prelude.toLowerCase().startsWith('@media')) {
+      if (_mediaQueries != null) {
+        throw FssParseException(
+          'Nested @media blocks are not supported at ${_loc(openIdx)}',
+        );
+      }
+      final query = prelude.substring('@media'.length).trim();
+      if (query.isEmpty) {
+        throw FssParseException(
+          'Missing media query for "@media" at ${_loc(openIdx)}',
+        );
+      }
+      _mediaQueries = _splitTopLevel(query, ',')
+          .map((q) => q.trim())
+          .where((q) => q.isNotEmpty)
+          .toList();
+      _mediaRules = [];
+      return openIdx + 1;
+    }
+    if (prelude.startsWith('@')) {
+      // Some other at rule like @keyframes, @font-face or @supports
+      return _skipAtRuleBlock(prelude, openIdx);
+    }
+    // A normal rule. Parse the declarations until the closing bracket.
+    final block = FssRuleBlock(const {});
+    int pos = openIdx + 1;
+    while (true) {
+      final (int idx, String? ch) = _nextStructural(pos, const [';', '}']);
+      final decl = _input.substring(pos, idx).trim();
+      if (ch == null) {
+        throw FssParseException(
+          'Unexpected end of stylesheet at ${_loc(_input.length)}, expected '
+          '"}" to close the rule "${prelude.trim()}".',
+        );
+      }
+      if (decl.isNotEmpty) {
+        _parseDeclaration(block, decl, pos);
+      }
+      pos = idx + 1;
+      if (ch == '}') {
+        break;
+      }
+    }
+    _finishRule(prelude, openIdx, block);
+    return pos;
+  }
+
+  /// Skips an unsupported at rule block like @keyframes or @font-face
+  /// starting at the "{" at position [openIdx].
+  ///
+  /// Returns the position just after the matching closing bracket.
+  int _skipAtRuleBlock(String prelude, int openIdx) {
+    _recover('Skipped unsupported at rule: "${prelude.trim()}"',
+        at: openIdx);
+    int depth = 1;
+    int pos = openIdx + 1;
+    while (depth > 0) {
+      final (int idx, String? ch) = _nextStructural(pos, const ['{', '}']);
+      if (ch == null) {
+        throw FssParseException(
+          'Unexpected end of stylesheet at ${_loc(_input.length)}, expected '
+          '"}" to close the at rule "${prelude.trim()}".',
+        );
+      }
+      if (ch == '{') {
+        depth++;
+      } else {
+        depth--;
+      }
+      pos = idx + 1;
+    }
+    return pos;
+  }
+
+  /// Closes the current media block and adds the collected rules.
+  void _closeMedia() {
+    final queries = _mediaQueries!;
+    final subRules = _mediaRules!;
+    _mediaQueries = null;
+    _mediaRules = null;
+    for (final query in queries) {
+      _rules.add(FssMediaRule(query, subRules));
     }
   }
-  return result;
+
+  /// Creates one rule per selector of the comma separated [prelude] and
+  /// adds them to the current target rule list.
+  void _finishRule(String prelude, int openIdx, FssRuleBlock block) {
+    final target = _mediaRules ?? _rules;
+    for (final part in _splitTopLevel(prelude, ',')) {
+      final selector = part.trim();
+      if (selector.isEmpty) {
+        continue;
+      }
+      try {
+        target.add(FssRule(FssSelector.parse(selector), block));
+      } on FssParseException catch (e) {
+        _recover('${e.message} (selector "$selector")', at: openIdx);
+      }
+    }
+  }
+
+  /// Parses a single `name: value` declaration and adds it to [block].
+  void _parseDeclaration(FssRuleBlock block, String decl, int declStart) {
+    final text = decl.trim();
+    if (text.isEmpty) {
+      return;
+    }
+    // The first ':' separates name and value. Property names do not
+    // contain ':' so the first occurrence is always the right one.
+    final ci = text.indexOf(':');
+    if (ci < 0) {
+      _recover('Invalid property definition (missing ":"): "$text"',
+          at: declStart);
+      return;
+    }
+    final name = text.substring(0, ci).trim();
+    var value = text.substring(ci + 1).trim();
+    // Drop a trailing "!important" flag. It is not supported but tolerated.
+    if (value.toLowerCase().endsWith('!important')) {
+      value = value.substring(0, value.length - '!important'.length).trim();
+    }
+    if (name.isEmpty || value.isEmpty) {
+      _recover('Invalid property definition: "$text"', at: declStart);
+      return;
+    }
+    parseFssRule(block, name, value, _lineOf(declStart),
+        strict: strict, warnings: warnings);
+  }
+
+  /// Handles a recoverable problem.
+  ///
+  /// In [strict] mode an [FssParseException] is thrown. Otherwise the
+  /// problem is added to [warnings] and parsing continues.
+  void _recover(String message, {required int at}) {
+    final full = '${_loc(at)}: $message';
+    if (strict) {
+      throw FssParseException(full);
+    }
+    warnings?.add(full);
+  }
+
+  /// Finds the next occurrence of any of the characters [chars] at
+  /// bracket depth 0 and outside of string literals starting at [from].
+  ///
+  /// Returns the index and the character found or
+  /// (input.length, null) if none is found.
+  (int, String?) _nextStructural(int from, List<String> chars) {
+    int depth = 0;
+    int i = from;
+    final n = _input.length;
+    while (i < n) {
+      final c = _input[i];
+      if (c == '"' || c == "'") {
+        i = _skipString(i);
+        continue;
+      }
+      if (c == '(') {
+        depth++;
+      } else if (c == ')') {
+        if (depth > 0) {
+          depth--;
+        }
+      } else if (depth == 0 && chars.contains(c)) {
+        return (i, c);
+      }
+      i++;
+    }
+    return (n, null);
+  }
+
+  /// Returns the index just after the string literal starting at [start].
+  int _skipString(int start) {
+    final quote = _input[start];
+    int i = start + 1;
+    final n = _input.length;
+    while (i < n) {
+      final c = _input[i];
+      if (c == '\\') {
+        i += 2;
+        continue;
+      }
+      if (c == quote) {
+        return i + 1;
+      }
+      if (c == '\n') {
+        return i; // Unterminated string, recover at next line
+      }
+      i++;
+    }
+    return n;
+  }
+
+  /// Returns the 1 based line number of the character at position [idx].
+  int _lineOf(int idx) {
+    int line = 1;
+    for (int i = 0; i < idx && i < _input.length; i++) {
+      if (_input[i] == '\n') {
+        line++;
+      }
+    }
+    return line;
+  }
+
+  /// Returns a "line X, col Y" description (1 based) for [idx].
+  String _loc(int idx) {
+    int line = 1;
+    int lineStart = 0;
+    for (int i = 0; i < idx && i < _input.length; i++) {
+      if (_input[i] == '\n') {
+        line++;
+        lineStart = i + 1;
+      }
+    }
+    return 'line $line, col ${idx - lineStart + 1}';
+  }
+}
+
+/// Removes `// line` and `/* block */` comments from [input].
+///
+/// Line breaks are preserved so that the line numbers of the remaining
+/// text stay valid. String literals are copied unchanged and a `//`
+/// that is part of a url like `http://...` is kept.
+String _stripComments(String input) {
+  final out = StringBuffer();
+  final n = input.length;
+  int i = 0;
+  while (i < n) {
+    final c = input[i];
+    if (c == '"' || c == "'") {
+      // Copy a string literal unchanged
+      out.write(c);
+      i++;
+      while (i < n) {
+        final s = input[i];
+        out.write(s);
+        i++;
+        if (s == '\\') {
+          if (i < n) {
+            out.write(input[i]);
+            i++;
+          }
+          continue;
+        }
+        if (s == c || s == '\n') break;
+      }
+      continue;
+    }
+    if (c == '/' && i + 1 < n) {
+      final d = input[i + 1];
+      if (d == '/') {
+        // A `//` right after a `:` is part of a url like `http://...`
+        if (i > 0 && input[i - 1] == ':') {
+          out.write('//');
+          i += 2;
+          continue;
+        }
+        // A line comment goes to the end of the line
+        while (i < n && input[i] != '\n') {
+          i++;
+        }
+        continue;
+      }
+      if (d == '*') {
+        // A block comment. Keep line breaks so line numbers stay valid.
+        i += 2;
+        while (i < n &&
+            !(input[i] == '*' && i + 1 < n && input[i + 1] == '/')) {
+          if (input[i] == '\n') {
+            out.write('\n');
+          }
+          i++;
+        }
+        i += 2; // Skip the `*/`
+        continue;
+      }
+    }
+    out.write(c);
+    i++;
+  }
+  return out.toString();
+}
+
+/// Splits [text] on the [separator] character but only at bracket
+/// depth 0 and outside of string literals.
+List<String> _splitTopLevel(String text, String separator) {
+  final parts = <String>[];
+  int start = 0;
+  int depth = 0;
+  String? quote;
+  for (int i = 0; i < text.length; i++) {
+    final c = text[i];
+    if (quote != null) {
+      if (c == '\\') {
+        i++;
+        continue;
+      }
+      if (c == quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (c == '"' || c == "'") {
+      quote = c;
+    } else if (c == '(') {
+      depth++;
+    } else if (c == ')') {
+      if (depth > 0) {
+        depth--;
+      }
+    } else if (depth == 0 && c == separator) {
+      parts.add(text.substring(start, i));
+      start = i + 1;
+    }
+  }
+  parts.add(text.substring(start));
+  return parts;
 }
 
 /// Parses a single property definition and adds it to the current rule block.
+///
+/// [strict] and [warnings] control how an unsupported property name is
+/// handled. See [parseStylesheet] for the exact semantics.
 void parseFssRule(
   FssRuleBlock currentRule,
   String propName,
   String? valueDef,
-  int lineNo,
-) {
+  int lineNo, {
+  bool strict = false,
+  List<String>? warnings,
+}) {
   // No value then do nothing.
-  if (valueDef == null) {
+  if (valueDef == null || valueDef.isEmpty) {
     return;
   }
-  final name = propName.toLowerCase().trim();
+  var name = propName.toLowerCase().trim();
+
+  // Strip a vendor prefix like "-webkit-" or "-moz-"
+  final vendorMatch = RegExp(r'^-(?:webkit|moz|ms|o)-').firstMatch(name);
+  if (vendorMatch != null) {
+    name = name.substring(vendorMatch.end);
+  }
 
   if (name == FssProperty.font.name) {
     parseFont(valueDef, currentRule, lineNo);
@@ -183,9 +507,14 @@ void parseFssRule(
       name.startsWith(FssProperty.fssPropertyPrefix) ||
       name.startsWith(FssProperty.varPrefix)) {
     currentRule.update({name: FssPropertyValue(name, value, lineNo)});
-  } else {
+  } else if (strict) {
     throw FssParseException(
       'Unsupported property name: "$name" at line $lineNo. Context: "$valueDef"',
+    );
+  } else {
+    warnings?.add(
+      'line $lineNo: unsupported property name: "$name". '
+      'Context: "$valueDef"',
     );
   }
 }

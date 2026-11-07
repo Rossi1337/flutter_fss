@@ -5,6 +5,12 @@ import 'package:fss/fss.dart';
 class FlutterStyleSheet {
   final List<FssRule> _rules = [];
 
+  /// Warnings collected while parsing the stylesheet.
+  ///
+  /// Only contains entries when the stylesheet was parsed in the
+  /// lenient (non strict) mode and contained recoverable problems.
+  final List<String> parseWarnings = [];
+
   /// The maximum number of resolved style blocks kept in the cache.
   /// Once this limit is reached the oldest entry is evicted.
   static const int _maxCachedResolutions = 512;
@@ -34,10 +40,14 @@ class FlutterStyleSheet {
   /// The default constructor for the [FlutterStyleSheet] class.
   /// Provides a way to create a style sheet with an optional stylesheet string,
   /// a list of rules, and system defaults.
+  ///
+  /// [strict] is forwarded to the stylesheet parser.
+  /// See [parseStylesheet] for the exact semantics.
   FlutterStyleSheet({
     String? stylesheet = '',
     List<FssRule>? rules,
     FssRuleBlock? systemDefaults,
+    bool strict = false,
   }) {
     _systemDefaults = systemDefaults ?? FssProperty.getInitialValues();
 
@@ -45,7 +55,8 @@ class FlutterStyleSheet {
       _rules.addAll(rules);
     }
     // Add everything from the style sheet
-    _rules.addAll(parseStylesheet(stylesheet));
+    _rules.addAll(parseStylesheet(stylesheet,
+        strict: strict, warnings: parseWarnings));
   }
 
   /// Resolves and merges all the rules that match the given classes string and
@@ -163,12 +174,13 @@ class FlutterStyleSheet {
     String? stylesheet,
     List<FssRule>? rules,
     FssRuleBlock? systemDefaults,
+    bool strict = false,
   }) {
     // original rules then add on top
     final List<FssRule> newRuleSet = [
       ..._rules,
       ...?rules,
-      ...parseStylesheet(stylesheet)
+      ...parseStylesheet(stylesheet, strict: strict, warnings: parseWarnings)
     ];
 
     return FlutterStyleSheet(

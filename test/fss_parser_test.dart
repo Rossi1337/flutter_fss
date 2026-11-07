@@ -725,6 +725,212 @@ void main() {
   });
 
   // -------------------------------------------------------------
+  // Single line and robustness tests
+  // -------------------------------------------------------------
+
+  group('Single line and robustness', () {
+    // -------------------------------------------------------------
+    test('Parse single line rule', () {
+      final styles = parseStylesheet('test { line-height: 11px; }');
+      expect(styles.length, 1);
+      expect(styles.first.properties.lineHeight, 11);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse single line rule without trailing semicolon', () {
+      final styles = parseStylesheet('test { line-height: 11px }');
+      expect(styles.first.properties.lineHeight, 11);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse multiple rules on one line', () {
+      final styles =
+          parseStylesheet('t1 { color: red; } t2 { color: blue; }');
+      expect(styles.length, 2);
+      expect(styles[0].properties.color, const Color(0xffff0000));
+      expect(styles[1].properties.color, const Color(0xff0000ff));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse multiple declarations on one line', () {
+      final styles = parseStylesheet('test { width: 10px; height: 20px; }');
+      final props = styles.first.properties;
+      expect(props.width, 10);
+      expect(props.height, 20);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse minified stylesheet', () {
+      const input =
+          '.a{color:red;font-size:12px}.b{background-image:url(http://example.com/i.png);border-radius:5px}';
+      final styles = parseStylesheet(input);
+      expect(styles.length, 2);
+      expect(styles[0].properties.color, const Color(0xffff0000));
+      expect(styles[0].properties.textStyle?.fontSize, 12);
+      expect(styles[1].properties.backgroundImage, isNotNull);
+      expect(styles[1].properties.borderRadius, BorderRadius.circular(5));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse value containing a colon', () {
+      final styles = parseStylesheet(
+          'test { background-image: url(http://example.com/i.png); }');
+      expect(styles.first.properties.backgroundImage, isNotNull);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse important flag', () {
+      final styles = parseStylesheet('test { color: red !important; }');
+      expect(styles.first.properties.color, const Color(0xffff0000));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse inline comments', () {
+      const input =
+          'test { /* before */ color: red; /* middle */ font-size: 10px; } // trailing';
+      final styles = parseStylesheet(input);
+      expect(styles.first.properties.color, const Color(0xffff0000));
+      expect(styles.first.properties.textStyle?.fontSize, 10);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse block comment containing url', () {
+      const input = '''
+        /* see http://example.com/ for more
+           and // not a comment here */
+        test { color: red; }
+      ''';
+      final styles = parseStylesheet(input);
+      expect(styles.length, 1);
+      expect(styles.first.properties.color, const Color(0xffff0000));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse line comment', () {
+      const input = '''
+        // A comment
+        test { color: red; }
+        // Another comment
+      ''';
+      final styles = parseStylesheet(input);
+      expect(styles.length, 1);
+      expect(styles.first.properties.color, const Color(0xffff0000));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse empty rule', () {
+      final styles = parseStylesheet('test { }');
+      expect(styles.length, 1);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse single line media query', () {
+      final rules =
+          parseStylesheet('@media (max-width: 600px) { a { color: red; } }');
+      expect(rules.length, 1);
+      expect(rules.first, isA<FssMediaRule>());
+      expect(
+        (rules.first as FssMediaRule).subRules.first.properties.color,
+        const Color(0xffff0000),
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Parse media query with multiple queries', () {
+      const input = '''
+        @media (min-width: 100px), (max-width: 200px) {
+          a { color: red; }
+        }
+      ''';
+      final rules = parseStylesheet(input);
+      expect(rules.length, 2);
+      expect(rules.first, isA<FssMediaRule>());
+      expect(rules.last, isA<FssMediaRule>());
+    });
+
+    // -------------------------------------------------------------
+    test('Unknown property is skipped in lenient mode', () {
+      final warnings = <String>[];
+      final styles = parseStylesheet(
+        'test { bogus-prop: 1px; color: red; }',
+        warnings: warnings,
+      );
+      expect(styles.length, 1);
+      expect(styles.first.properties.color, const Color(0xffff0000));
+      expect(warnings, hasLength(1));
+      expect(warnings.first, contains('bogus-prop'));
+    });
+
+    // -------------------------------------------------------------
+    test('Unknown property throws in strict mode', () {
+      expect(
+        () => parseStylesheet('test { bogus-prop: 1px; }', strict: true),
+        throwsA(isA<FssParseException>()),
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Invalid declaration is skipped in lenient mode', () {
+      final warnings = <String>[];
+      final styles = parseStylesheet(
+        'test { color; color: red; }',
+        warnings: warnings,
+      );
+      expect(styles.first.properties.color, const Color(0xffff0000));
+      expect(warnings, hasLength(1));
+    });
+
+    // -------------------------------------------------------------
+    test('Invalid declaration throws in strict mode', () {
+      expect(
+        () => parseStylesheet('test { color; }', strict: true),
+        throwsA(isA<FssParseException>()),
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Vendor prefix is stripped', () {
+      final styles =
+          parseStylesheet('test { -webkit-text-stroke: 2px blue; }');
+      expect(styles.first.properties.textStyle?.foreground?.strokeWidth, 2);
+    });
+
+    // -------------------------------------------------------------
+    test('Unclosed rule throws', () {
+      expect(
+        () => parseStylesheet('test { color: red;'),
+        throwsA(isA<FssParseException>()),
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Unbalanced closing bracket throws', () {
+      expect(
+        () => parseStylesheet('test { color: red; } }'),
+        throwsA(isA<FssParseException>()),
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Unclosed media block throws', () {
+      expect(
+        () => parseStylesheet('@media (max-width: 600px) { a { color: red; }'),
+        throwsA(isA<FssParseException>()),
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('FlutterStyleSheet collects warnings', () {
+      final st = FlutterStyleSheet(
+        stylesheet: 'test { bogus-prop: 1px; line-height: 11px; }',
+      );
+      expect(st.rules.length, 1);
+      expect(st.parseWarnings, hasLength(1));
+      expect(st.rules.first.properties.lineHeight, 11);
+    });
+  });
+
+  // -------------------------------------------------------------
   // FssRuleBlock equality tests
   // -------------------------------------------------------------
 

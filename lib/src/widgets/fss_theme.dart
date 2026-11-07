@@ -25,16 +25,21 @@ class FssTheme extends InheritedWidget {
   /// Parses the rules from the given String
   /// If you specify both the stylesheet and rules then we parse first
   /// the stylesheet and add the rules afterwards
+  ///
+  /// [strict] is forwarded to the stylesheet parser.
+  /// See [parseStylesheet] for the exact semantics.
   FssTheme({
     super.key,
     String? stylesheet = '',
     List<FssRule>? rules,
     required super.child,
     FssRuleBlock? systemDefaults,
+    bool strict = false,
   }) : stylesheet = FlutterStyleSheet(
           stylesheet: stylesheet,
           rules: rules,
           systemDefaults: systemDefaults,
+          strict: strict,
         );
 
   // Creates a theme with some system defaults derived from the Material Theme
