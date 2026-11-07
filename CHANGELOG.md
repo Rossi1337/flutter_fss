@@ -24,6 +24,10 @@ Complete internal restructuring. Adding support for more CSS attributes and fixi
 * Performance: resolved property values are now memoized per rule block
   (`get`, `getSize`, `getColor` and the composite getters like `textStyle`,
   `margin`, `border`, ...). Property lookup by name is O(1) now.
+* Performance: `FssParent` now only marks its dependents dirty when the
+  resolved styles actually changed (value equality on `FssRuleBlock`).
+  Rebuilding an fss widget no longer cascades rebuilds through the whole
+  fss subtree when the styles are unchanged.
 
 ## 1.0.0
 

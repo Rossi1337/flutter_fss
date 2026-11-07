@@ -48,6 +48,10 @@ class FssRuleBlock {
   /// by [update].
   final List<_LazyValue> _lazies = [];
 
+  /// Memoized [hashCode].
+  bool _hashResolved = false;
+  int _hash = 0;
+
   _LazyValue<FssBase>? _baselineLazy;
 
   _LazyValue<EdgeInsetsGeometry?>? _marginLazy;
@@ -691,6 +695,7 @@ class FssRuleBlock {
     _getCache = null;
     _sizeCache = null;
     _colorCache = null;
+    _hashResolved = false;
     for (final lazy in _lazies) {
       lazy.reset();
     }
@@ -1005,6 +1010,50 @@ class FssRuleBlock {
     parts.sort();
     final dir = parts.fold('', (prev, next) => '$prev $next').trim();
     return parseGradientTo(dir);
+  }
+
+  /// Value equality over the property map and the parent chain.
+  ///
+  /// Used by widgets (e.g. [FssParent]) to decide whether a newly resolved
+  /// block is semantically the same as a previously resolved one, so that
+  /// unchanged subtrees are not marked for rebuild.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! FssRuleBlock) return false;
+    if (hashCode != other.hashCode) return false;
+    // Note: Map's operator == is identity based in Dart 3.11+, so the
+    // property maps are compared entry by entry.
+    return _propertiesEqual(_properties, other._properties) &&
+        _parent == other._parent;
+  }
+
+  bool _propertiesEqual(
+    Map<String, FssPropertyValue> a,
+    Map<String, FssPropertyValue> b,
+  ) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (final MapEntry(:key, :value) in a.entries) {
+      if (b[key] != value) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    if (!_hashResolved) {
+      _hashResolved = true;
+      // Note: hash the entries, not the map itself. Since Dart 3.11 Map
+      // has identity-based == and hashCode, so hashing the map would
+      // defeat the memoized value equality in operator ==.
+      var hash = _parent?.hashCode;
+      _properties.forEach((key, value) {
+        hash = Object.hash(hash, key, value);
+      });
+      _hash = hash ?? 0;
+    }
+    return _hash;
   }
 }
 

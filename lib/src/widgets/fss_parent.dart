@@ -15,8 +15,12 @@ class FssParent extends InheritedWidget {
   });
 
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return true;
+  bool updateShouldNotify(covariant FssParent oldWidget) {
+    // Only notify dependents when the resolved styles actually changed.
+    // Rebuilding a widget does not mean its styles changed, and notifying
+    // unconditionally would mark every descendant that depends on this
+    // FssParent dirty, cascading rebuilds through the whole subtree.
+    return oldWidget.applicableStyles != applicableStyles;
   }
 
   /// Returns the [FssRuleBlock] that is applicable to this [context].
