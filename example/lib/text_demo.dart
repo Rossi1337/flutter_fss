@@ -71,16 +71,24 @@ void main() {
 
 /// Creates a simple app with a single list.
 /// So you get the styles of the STYLESHEET above.
-class TestApp extends StatelessWidget {
+class TestApp extends StatefulWidget {
   /// Constructor
   const TestApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<TestApp> createState() => _TestAppState();
+}
+
+class _TestAppState extends State<TestApp> {
+  // The theme is created once on the first build. Reusing the same instance
+  // on every rebuild avoids re-parsing the stylesheet.
+  FssTheme? _theme;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Text Demo',
-      builder: (context, _) => FssTheme.withHtmlDefaults(
+      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         child: Padding(
           padding: const EdgeInsets.all(8.0),

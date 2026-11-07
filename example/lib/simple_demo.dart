@@ -28,15 +28,24 @@ void main() {
 }
 
 /// Creates a simple app
-class TestApp extends StatelessWidget {
+class TestApp extends StatefulWidget {
   const TestApp({super.key});
+
+  @override
+  State<TestApp> createState() => _TestAppState();
+}
+
+class _TestAppState extends State<TestApp> {
+  // The theme is created once on the first build. Reusing the same instance
+  // on every rebuild avoids re-parsing the stylesheet.
+  FssTheme? _theme;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Simple Demo',
       // Install the theme with the given stylesheet
-      builder: (context, _) => FssTheme.withHtmlDefaults(
+      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         // Add a div with a given "class" and a text with a given "id"
         child: Center(
