@@ -31,59 +31,6 @@ class FssRuleBlock {
   final FssRuleBlock? _initialValues;
   final FssRuleBlock? _parent;
 
-  /// Two rule blocks are equal when they contain the same properties and
-  /// their [initialValues] and [parent] chains are equal.
-  ///
-  /// The parent chain is compared recursively, so the chain must be acyclic,
-  /// which holds by construction since parents always point towards the root.
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is! FssRuleBlock) {
-      return false;
-    }
-    return _blockEquals(_properties, other._properties) &&
-        _initialValues == other._initialValues &&
-        _parent == other._parent;
-  }
-
-  @override
-  int get hashCode => Object.hash(
-        _mapHash(_properties),
-        _initialValues,
-        _parent,
-      );
-
-  /// Order-independent content comparison of two property maps.
-  static bool _blockEquals(
-      Map<String, FssPropertyValue> a, Map<String, FssPropertyValue> b) {
-    if (identical(a, b)) {
-      return true;
-    }
-    if (a.length != b.length) {
-      return false;
-    }
-    for (final entry in a.entries) {
-      final otherValue = b[entry.key];
-      if (otherValue == null || otherValue != entry.value) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /// Order-independent hash consistent with [_blockEquals].
-  /// Uses addition so that the entry order does not influence the result.
-  static int _mapHash(Map<String, FssPropertyValue> map) {
-    var hash = 17;
-    for (final entry in map.entries) {
-      hash += Object.hash(entry.key, entry.value);
-    }
-    return hash;
-  }
-
   Color? get color => getColor(FssProperty.color.name);
 
   Color? get backgroundColor => getColor(FssProperty.background_color.name);

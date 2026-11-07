@@ -11,21 +11,6 @@ class FlutterStyleSheet {
   /// lenient (non strict) mode and contained recoverable problems.
   final List<String> parseWarnings = [];
 
-  /// The maximum number of resolved style blocks kept in the cache.
-  /// Once this limit is reached the oldest entry is evicted.
-  static const int _maxCachedResolutions = 512;
-
-  /// A cache for the resolved styles keyed by the inputs of the resolution.
-  ///
-  /// Resolution (matching, sorting by specificity and merging of all rules)
-  /// is the most expensive part of this library and it is invoked on every
-  /// build of every fss widget. If the inputs are the same the result is
-  /// identical, so the result is cached here to avoid re-resolving it.
-  ///
-  /// Insertion order is kept so that the oldest entry can be evicted
-  /// once the cache reaches [_maxCachedResolutions] entries.
-  final Map<_ResolvedStylesKey, FssRuleBlock> _resolvedStylesCache = {};
-
   /// The list of rules in this style sheet.
   List<FssRule> get rules {
     return List.unmodifiable(_rules);
@@ -81,21 +66,6 @@ class FlutterStyleSheet {
     final matchClassesAsList =
         matchClasses.split(RegExp(r'\s+')).map((e) => '.${e.trim()}').toList();
 
-    // Look up the resolved styles in the cache. The cache key contains all
-    // values that influence the result, so a cache hit is always valid.
-    final cacheKey = _ResolvedStylesKey(
-      matchType: matchType,
-      matchId: idToMatch,
-      matchClasses: matchClasses,
-      matchAttributes: matchAttributes,
-      parentStyles: parentStyles,
-      media: media,
-    );
-    final cached = _resolvedStylesCache[cacheKey];
-    if (cached != null) {
-      return cached;
-    }
-
     // first check all the @Media query rules
     final List<FssRule> rulesToMatch = [];
     for (final rule in _rules) {
@@ -150,23 +120,7 @@ class FlutterStyleSheet {
       );
     }
 
-    // Remember the result in the cache and evict the oldest entry
-    // if the cache exceeds its size limit.
-    _resolvedStylesCache[cacheKey] = result;
-    if (_resolvedStylesCache.length > _maxCachedResolutions) {
-      _resolvedStylesCache.remove(_resolvedStylesCache.keys.first);
-    }
-
     return result;
-  }
-
-  /// Removes all cached resolved styles.
-  ///
-  /// This is useful if you change the rules or the system defaults of this
-  /// style sheet at run time and you want to make sure that all subsequent
-  /// resolutions start from scratch.
-  void clearResolvedStylesCache() {
-    _resolvedStylesCache.clear();
   }
 
   /// Create a copy of the current stylesheet with additional rules added.
@@ -199,92 +153,5 @@ class FlutterStyleSheet {
       ..writeln('----------------------------------------------------------');
     _rules.forEach(result.writeln);
     return result.toString();
-  }
-}
-
-/// Cache key for the resolved styles cache.
-///
-/// [operator ==] and [hashCode] consider every value that influences the
-/// resolution result, so an equal key always refers to the same result.
-///
-/// [parentStyles] is compared by value via [FssRuleBlock.operator ==],
-/// which recursively walks the property maps and the parent chain.
-class _ResolvedStylesKey {
-  _ResolvedStylesKey({
-    required this.matchType,
-    required this.matchId,
-    required this.matchClasses,
-    required this.matchAttributes,
-    required this.parentStyles,
-    required this.media,
-  });
-
-  final String matchType;
-  final String matchId;
-  final String matchClasses;
-  final Map<String, String> matchAttributes;
-  final FssRuleBlock? parentStyles;
-  final MediaQueryData? media;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is! _ResolvedStylesKey) {
-      return false;
-    }
-    return other.matchType == matchType &&
-        other.matchId == matchId &&
-        other.matchClasses == matchClasses &&
-        _mapEquals(other.matchAttributes, matchAttributes) &&
-        other.parentStyles == parentStyles &&
-        other.media == media;
-  }
-
-  @override
-  int get hashCode => Object.hash(
-        matchType,
-        matchId,
-        matchClasses,
-        _mapHash(matchAttributes),
-        parentStyles,
-        media,
-      );
-
-  @override
-  String toString() =>
-      '_ResolvedStylesKey($matchType, $matchId, $matchClasses, $matchAttributes, $parentStyles, $media)';
-
-  /// Order-independent content comparison for [matchAttributes].
-  static bool _mapEquals(Map<String, String>? a, Map<String, String>? b) {
-    if (identical(a, b)) {
-      return true;
-    }
-    if (a == null || b == null) {
-      return false;
-    }
-    if (a.length != b.length) {
-      return false;
-    }
-    for (final entry in a.entries) {
-      if (b[entry.key] != entry.value) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /// Order-independent hash consistent with [_mapEquals].
-  /// Uses addition so that the entry order does not influence the result.
-  static int _mapHash(Map<String, String>? map) {
-    if (map == null) {
-      return 0;
-    }
-    var hash = 17;
-    for (final entry in map.entries) {
-      hash += Object.hash(entry.key, entry.value);
-    }
-    return hash;
   }
 }
