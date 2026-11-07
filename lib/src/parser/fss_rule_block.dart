@@ -881,14 +881,15 @@ class FssRuleBlock {
         );
       }
     }
-    // Interpolate missing values
-    if (stops.isNotEmpty && stops[0] == -1) stops[0] = 0;
-    if (stops.isNotEmpty && stops[stops.length - 1] == -1) {
-      stops[stops.length - 1] = 1.0;
-    }
-    // TODO interpolate values if -1
+    // Fill in the missing stop positions (-1 placeholders).
+    final filledStops = _fillGradientStops(stops);
 
-    return LinearGradient(colors: colors, stops: stops, begin: begin, end: end);
+    return LinearGradient(
+      colors: colors,
+      stops: filledStops,
+      begin: begin,
+      end: end,
+    );
   }
 
   RadialGradient _parseRadialGradient(
@@ -1055,6 +1056,53 @@ class FssRuleBlock {
     }
     return _hash;
   }
+}
+
+/// Fill in missing gradient stop positions (given as -1 placeholders).
+///
+/// Follows the CSS rules: the first stop without a position is placed at
+/// the start of the gradient (0.0) and the last one at the end (1.0).
+/// A run of stops without a position between two positioned stops is
+/// distributed evenly over the free space between them.
+///
+/// Returns a new list, the input list is not modified.
+List<double> _fillGradientStops(List<double> stops) {
+  final result = List<double>.of(stops);
+  if (result.length == 1) {
+    if (result.first == -1) {
+      result.first = 0.0;
+    }
+    return result;
+  }
+  if (result.first == -1) {
+    result.first = 0.0;
+  }
+  if (result.last == -1) {
+    result.last = 1.0;
+  }
+  // Find and fill each run of -1 placeholders.
+  var start = 0;
+  while (start < result.length && result[start] != -1) {
+    start++;
+  }
+  for (; start < result.length; start++) {
+    if (result[start] != -1) {
+      continue;
+    }
+    // The stop before start is always positioned, find the next one.
+    var end = start + 1;
+    while (end < result.length && result[end] == -1) {
+      end++;
+    }
+    final from = result[start - 1];
+    final to = end < result.length ? result[end] : 1.0;
+    final count = end - start;
+    for (var k = 0; k < count; k++) {
+      result[start + k] = from + (to - from) * (k + 1) / (count + 1);
+    }
+    start = end - 1;
+  }
+  return result;
 }
 
 /// Lazily computes a value once and caches it.

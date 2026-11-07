@@ -214,6 +214,72 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    test('Parse linear-gradient without stops', () {
+      const input = '''
+        test { 
+          background-image: linear-gradient(to right, red, green, blue); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is LinearGradient, true);
+      expect(
+        styles.backgroundGradient?.colors,
+        [
+          const Color(0xffff0000),
+          const Color(0xff008000),
+          const Color(0xff0000ff)
+        ],
+      );
+      expect(styles.backgroundGradient?.stops, [0.0, 0.5, 1.0]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse linear-gradient with missing middle stop', () {
+      const input = '''
+        test { 
+          background-image: linear-gradient(to right, red 0%, green, blue 100%); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is LinearGradient, true);
+      expect(styles.backgroundGradient?.stops, [0.0, 0.5, 1.0]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse linear-gradient with consecutive missing stops', () {
+      const input = '''
+        test { 
+          background-image: linear-gradient(to right, red 0%, green, blue, cyan 100%); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is LinearGradient, true);
+      expect(
+        styles.backgroundGradient?.stops,
+        [0.0, 1 / 3, 2 / 3, 1.0],
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Parse linear-gradient with missing first stop', () {
+      const input = '''
+        test { 
+          background-image: linear-gradient(to right, red, green 50%, blue 75%); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is LinearGradient, true);
+      expect(styles.backgroundGradient?.stops, [0.0, 0.5, 0.75]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse linear-gradient with missing last stop', () {
+      const input = '''
+        test { 
+          background-image: linear-gradient(to right, red 25%, green 50%, blue); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is LinearGradient, true);
+      expect(styles.backgroundGradient?.stops, [0.25, 0.5, 1.0]);
+    });
+
+    // -------------------------------------------------------------
     test('Parse background-image linear-radial', () {
       const input = '''
         test { 
