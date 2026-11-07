@@ -765,17 +765,25 @@ class FssRuleBlock {
       return null;
     }
 
-    if (!value.startsWith('var(')) {
+    if (!value.contains('var(')) {
       return value;
     }
-    // Try to resolve var.
-    final varName = value.substring(4, value.lastIndexOf(')')).trim();
-    final replacement = get(varName);
-    if (replacement == null) {
-      return null;
+    // Replace all var(--name) occurrences, working from the end of the
+    // string so that the match offsets stay valid.
+    final varRegExp = RegExp(r'var\(\s*(--\w[\w-]*)\s*\)');
+    final matches = varRegExp.allMatches(value).toList();
+    if (matches.isEmpty) {
+      return value;
     }
-
-    return resolveValue(replacement.value);
+    var resolved = value;
+    for (final m in matches.reversed) {
+      final varName = m.group(1)!;
+      final replacement = resolveValue(get(varName)?.value);
+      resolved = resolved.substring(0, m.start) +
+          (replacement ?? '') +
+          resolved.substring(m.end);
+    }
+    return resolved;
   }
 
   Shadow _parseShadow(FssPropertyValue valueDef, FssBase base) {
@@ -910,7 +918,6 @@ class FssRuleBlock {
       // TODO First part is special
 
       final colStop = splitValues(this, part);
-      // TODO resolve split values
       colors.add(
         parseColorDef(
           FssPropertyValue('color', colStop[0], imageDef.lineNo),

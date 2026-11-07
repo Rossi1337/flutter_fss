@@ -362,6 +362,27 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    test('Parse radial-gradient with var stops and colors', () {
+      const input = '''
+        test { 
+          --stop: 50%; 
+          --color: green; 
+          background-image: radial-gradient(red 0%, var(--color) var(--stop), blue 100%); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is RadialGradient, true);
+      expect(
+        styles.backgroundGradient?.colors,
+        [
+          const Color(0xffff0000),
+          const Color(0xff008000),
+          const Color(0xff0000ff)
+        ],
+      );
+      expect(styles.backgroundGradient?.stops, [0.0, 0.5, 1.0]);
+    });
+
+    // -------------------------------------------------------------
     test('Parse border', () {
       const input = '''
         test { 
