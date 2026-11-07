@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:fss/src/border/fss_dashed_border.dart';
 import 'package:fss/src/exception/fss_parse_exception.dart';
@@ -81,8 +83,10 @@ class FssRuleBlock {
     if (imagePath == null) {
       return null;
     }
-    if (imagePath.value.contains('linear-gradient(') ||
-        imagePath.value.contains('radial-gradient(')) {
+    // A gradient value is not an image; it is handled by [backgroundGradient].
+    // Return null here so the gradient is not covered by a DecorationImage
+    // (background images paint on top of gradients).
+    if (imagePath.value.contains('gradient(')) {
       return null;
     }
 
@@ -133,12 +137,7 @@ class FssRuleBlock {
     } else if (propValue.startsWith('radial-gradient(')) {
       return _parseRadialGradient(propValue, imageDef);
     } else if (propValue.startsWith('sweep-gradient(')) {
-      //TODO support cone gradient?.
-      return const SweepGradient(
-        colors: [Colors.black, Colors.white],
-        startAngle: -4.45,
-        endAngle: 4.7,
-      );
+      return _parseSweepGradient(propValue, imageDef);
     }
     return null;
   }
@@ -966,6 +965,85 @@ class FssRuleBlock {
       colors: colors,
       stops: filledStops,
       radius: radius,
+    );
+  }
+
+  SweepGradient _parseSweepGradient(
+    String propValue,
+    FssPropertyValue imageDef,
+  ) {
+    final spec = propValue.substring(
+      propValue.indexOf('(') + 1,
+      propValue.lastIndexOf(')'),
+    );
+    final parts = splitFunctionParams(this, spec);
+
+    final List<Color> colors = [];
+    final List<double> stops = [];
+    // A CSS cone gradient starts at 12 o'clock by default (from 0deg).
+    var cssAngle = 0.0;
+    var beginSeen = false;
+    for (final part in parts) {
+      if (!beginSeen) {
+        beginSeen = true;
+        // The first part may be a "from <angle>" position clause.
+        if (part.toLowerCase().startsWith('from ')) {
+          cssAngle = FssAngle.parse(part.substring(5)).getDegree();
+          continue;
+        }
+      }
+
+      final colStop = splitValues(this, part);
+      colors.add(
+        parseColorDef(
+          FssPropertyValue('color', colStop[0], imageDef.lineNo),
+        ),
+      );
+      if (colStop.length == 1) {
+        // Only color defined. Put a placeholder as stop to interpolate later.
+        stops.add(-1);
+      }
+      if (colStop.length > 1) {
+        // Color and stop defined
+        stops.add(
+          parsePercent(
+            FssPropertyValue('stop', colStop[1], imageDef.lineNo),
+          ),
+        );
+      }
+      if (colStop.length > 2) {
+        // Two stop definition
+        colors.add(
+          parseColorDef(
+            FssPropertyValue('color', colStop[0], imageDef.lineNo),
+          ),
+        );
+        stops.add(
+          parsePercent(
+            FssPropertyValue('stop', colStop[2], imageDef.lineNo),
+          ),
+        );
+      }
+    }
+    // Fill in the missing stop positions (-1 placeholders).
+    final filledStops = _fillGradientStops(stops);
+
+    // A CSS cone gradient starts its first stop at 12 o'clock by default and
+    // the "from <angle>" clause is measured clockwise from there.
+    //
+    // A Flutter SweepGradient only paints the sector [startAngle, endAngle]
+    // (filling the rest with its tile mode), so a non-zero startAngle would
+    // leave a gap in a full-circle sweep. Instead we always paint the whole
+    // circle [0, 2π) and rotate it. With no rotation stop 0 sits at 3
+    // o'clock (the positive x-axis); the CSS angle points clockwise from 12
+    // o'clock, so rotate clockwise by (cssAngle - 90°).
+    final rotation = (cssAngle - 90.0) * math.pi / 180.0;
+    return SweepGradient(
+      colors: colors,
+      stops: filledStops,
+      startAngle: 0.0,
+      endAngle: 2 * math.pi,
+      transform: GradientRotation(rotation),
     );
   }
 

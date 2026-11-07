@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fss/fss.dart';
@@ -380,6 +382,76 @@ void main() {
         ],
       );
       expect(styles.backgroundGradient?.stops, [0.0, 0.5, 1.0]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse background-image sweep-gradient', () {
+      const input = '''
+        test { 
+          background-image: sweep-gradient(red, #00ff00 50%, rgb(0,0,255)); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is SweepGradient, true);
+      expect(styles.backgroundGradient?.colors, [
+        const Color(0xffff0000),
+        const Color(0xff00ff00),
+        const Color(0xff0000ff)
+      ]);
+      expect(styles.backgroundGradient?.stops, [0.0, 0.5, 1.0]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse background-image sweep-gradient with from angle', () {
+      const input = '''
+        test { 
+          background-image: sweep-gradient(from 90deg, red, blue); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is SweepGradient, true);
+      final g = styles.backgroundGradient! as SweepGradient;
+      expect(g.colors, [
+        const Color(0xffff0000),
+        const Color(0xff0000ff)
+      ]);
+      // The sweep always paints the full circle [0, 2π); the start position
+      // is expressed as a rotation, not by shifting the angle sector.
+      expect(g.startAngle, 0.0);
+      expect(g.endAngle, 2 * math.pi);
+      // from 90deg points at 3 o'clock, where a non-rotated sweep already
+      // starts, so the rotation is zero.
+      expect(g.transform, const GradientRotation(0.0));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse background-image sweep-gradient without from angle', () {
+      const input = '''
+        test { 
+          background-image: sweep-gradient(red, blue); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      expect(styles.backgroundGradient is SweepGradient, true);
+      final g = styles.backgroundGradient! as SweepGradient;
+      // No angle: the default is 'from 0deg' which is 12 o'clock. The sweep
+      // still paints [0, 2π); the seam is moved from its default 3 o'clock
+      // position up to 12 o'clock by rotating -90°.
+      expect(g.startAngle, 0.0);
+      expect(g.endAngle, 2 * math.pi);
+      final rotation = g.transform! as GradientRotation;
+      expect(rotation.radians, closeTo(-math.pi / 2, 1e-9));
+    });
+
+    // -------------------------------------------------------------
+    test('Parse background-image sweep-gradient does not create an image', () {
+      const input = '''
+        test { 
+          background-image: sweep-gradient(from 45deg, red, blue); 
+        } ''';
+      final styles = parseStylesheet(input).first.properties;
+      // The sweep is exposed as a gradient ...
+      expect(styles.backgroundGradient is SweepGradient, true);
+      // ... and must NOT also be turned into a DecorationImage, because
+      // background images paint on top of gradients and would hide it.
+      expect(styles.backgroundImage, isNull);
     });
 
     // -------------------------------------------------------------
