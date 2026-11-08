@@ -873,10 +873,24 @@ ImageRepeat parseBackgroundRepeat(FssPropertyValue valueDef) =>
       _ => ImageRepeat.noRepeat
     };
 
-//// Parses the background size style value
-// TODO support 2 value mode like 100% 100% or auto 100%
-BoxFit? parseBackgroundSize(FssPropertyValue valueDef) =>
-    switch (valueDef.value) {
+/// Parses the background size style value.
+///
+/// Supports the single-value keywords (`cover`, `contain`, `fill`,
+/// `scale-down`, `fit-width`, `fit-height`, `auto`) as well as the two-value
+/// form `<width> <height>`.
+///
+/// Because `BoxFit` cannot express independent x/y sizes, the two-value form
+/// is mapped to the closest `BoxFit`:
+///
+///   `auto auto`   -> `BoxFit.none` (natural size)
+///   `100% 100%`   -> `BoxFit.fill`
+///   `100% auto`   -> `BoxFit.fitWidth`
+///   `auto 100%`   -> `BoxFit.fitHeight`
+///   anything else -> `BoxFit.fill` (documented approximation)
+BoxFit? parseBackgroundSize(FssPropertyValue valueDef) {
+  final parts = valueDef.value.trim().toLowerCase().split(RegExp(r'\s+'));
+  if (parts.length == 1) {
+    return switch (parts[0]) {
       'contain' => BoxFit.contain,
       'cover' => BoxFit.cover,
       'fill' => BoxFit.fill,
@@ -884,8 +898,25 @@ BoxFit? parseBackgroundSize(FssPropertyValue valueDef) =>
       'fit-width' => BoxFit.fitWidth,
       'fit-height' => BoxFit.fitHeight,
       'auto' => BoxFit.none,
-      _ => null
+      _ => null,
     };
+  }
+  final w = parts[0];
+  final h = parts.length > 1 ? parts[1] : 'auto';
+  if (w == 'auto' && h == 'auto') {
+    return BoxFit.none;
+  }
+  if (w == '100%' && h == 'auto') {
+    return BoxFit.fitWidth;
+  }
+  if (w == 'auto' && h == '100%') {
+    return BoxFit.fitHeight;
+  }
+  // Both dimensions are set (e.g. `100% 100%`) or the combination cannot be
+  // expressed exactly by a BoxFit (e.g. `100% 50%`): approximate by
+  // stretching the image to fill the box.
+  return BoxFit.fill;
+}
 
 /// Helper method to capitalize all words of a text.
 String capitalizeAllWords(String input) {

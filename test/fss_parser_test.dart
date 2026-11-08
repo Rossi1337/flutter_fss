@@ -200,6 +200,69 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    group('background-size', () {
+      test('single keyword still works', () {
+        const input = '''
+          test {
+            background-image: test.png;
+            background-size: cover;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.backgroundImage?.fit, BoxFit.cover);
+      });
+
+      test('auto auto -> natural size (none)', () {
+        const input = '''
+          test {
+            background-image: test.png;
+            background-size: auto auto;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.backgroundImage?.fit, BoxFit.none);
+      });
+
+      test('100% 100% -> fill', () {
+        const input = '''
+          test {
+            background-image: test.png;
+            background-size: 100% 100%;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.backgroundImage?.fit, BoxFit.fill);
+      });
+
+      test('100% auto -> fitWidth', () {
+        const input = '''
+          test {
+            background-image: test.png;
+            background-size: 100% auto;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.backgroundImage?.fit, BoxFit.fitWidth);
+      });
+
+      test('auto 100% -> fitHeight', () {
+        const input = '''
+          test {
+            background-image: test.png;
+            background-size: auto 100%;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.backgroundImage?.fit, BoxFit.fitHeight);
+      });
+
+      test('mixed two-value approximated by fill', () {
+        const input = '''
+          test {
+            background-image: test.png;
+            background-size: 100% 50%;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.backgroundImage?.fit, BoxFit.fill);
+      });
+    });
+
+    // -------------------------------------------------------------
     test('Parse background-image linear-gradient', () {
       const input = '''
         test { 
