@@ -77,6 +77,7 @@ enum FssProperty {
   fss_screen_height._('-fss-screen-height', '${FssBase.dummyScreenHeight}px'),
   overflow._('overflow', 'visible'),
   padding._('padding', null, inherited: false),
+  quote._('quote', '"\\201C \\201D" "\\2018 \\2019"'),
   padding_bottom._('padding-bottom', '0', inherited: false),
   padding_left._('padding-left', '0', inherited: false),
   padding_right._('padding-right', '0', inherited: false),

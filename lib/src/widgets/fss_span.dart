@@ -8,6 +8,12 @@ import 'package:fss/src/widgets/fss_widget.dart';
 class FssSpan extends FssWidget {
   final String data;
 
+  /// The quote nesting level for `content: open-quote`/`close-quote`.
+  ///
+  /// Level 0 (the default) selects the first quote pair of the `quote`
+  /// property, level 1 the second one and so on, cycling through the list.
+  final int nesting;
+
   /// Creates a new [FssSpan] with the given [data].
   /// To style the widget you can speficy a [fssType], [fssID] and [fssClass].
   const FssSpan(
@@ -17,12 +23,13 @@ class FssSpan extends FssWidget {
     super.fssID,
     super.fssClass,
     super.fssAttributes,
+    this.nesting = 0,
   });
 
   @override
   Widget buildContent(BuildContext context, FssRuleBlock applicableRule) {
     return Text(
-      applicableRule.transformText(data),
+      applicableRule.transformText(data, nesting: nesting),
       style: applicableRule.textStyle,
       overflow: applicableRule.wrapText ? null : applicableRule.textOverflow,
       softWrap: applicableRule.wrapText,

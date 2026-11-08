@@ -693,6 +693,119 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    group('Quote property (open-quote / close-quote)', () {
+      test('open-quote uses the CSS default open quote', () {
+        const input = '''
+          test { 
+            content: open-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText(''), '\u201c');
+      });
+
+      test('close-quote uses the CSS default close quote', () {
+        const input = '''
+          test { 
+            content: close-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText(''), '\u201d');
+      });
+
+      test('quote property overrides the open quote', () {
+        const input = '''
+          test { 
+            quote: "\u00ab" "\u00bb" "\u2039" "\u203a";
+            content: open-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText(''), '\u00ab');
+      });
+
+      test('quote property overrides the close quote', () {
+        const input = '''
+          test { 
+            quote: "\u00ab" "\u00bb" "\u2039" "\u203a";
+            content: close-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText(''), '\u00bb');
+      });
+
+      test('quote strings decode hex escapes', () {
+        const input = '''
+          test { 
+            quote: "\\201E \\201F" "x" "y" "z";
+            content: open-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        // The space after a hex escape is part of the escape.
+        expect(styles.transformText(''), '\u201e\u201f');
+      });
+
+      test('nesting level 1 uses the second quote pair', () {
+        const input = '''
+          test { 
+            quote: "\u00ab" "\u00bb" "\u2039" "\u203a";
+            content: open-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText('', nesting: 1), '\u2039');
+      });
+
+      test('nesting level 1 close-quote uses the second quote pair', () {
+        const input = '''
+          test { 
+            quote: "\u00ab" "\u00bb" "\u2039" "\u203a";
+            content: close-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText('', nesting: 1), '\u203a');
+      });
+
+      test('nesting cycles through the quote list', () {
+        const input = '''
+          test { 
+            quote: "\u00ab" "\u00bb" "\u2039" "\u203a";
+            content: open-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText('', nesting: 2), '\u00ab');
+        expect(styles.transformText('', nesting: 3), '\u2039');
+      });
+
+      test('default quotes cycle with nesting', () {
+        const input = '''
+          test { 
+            content: close-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText('', nesting: 1), '\u2019');
+        expect(styles.transformText('', nesting: 2), '\u201d');
+      });
+
+      test('odd number of quotes reuses the last one to close', () {
+        const input = '''
+          test { 
+            quote: 'a' 'b' 'c';
+            content: close-quote;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText('', nesting: 1), 'c');
+      });
+
+      test('quote does not affect plain content strings', () {
+        const input = '''
+          test { 
+            quote: "\u00ab" "\u00bb";
+            content: "hello";
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.transformText(''), 'hello');
+      });
+    });
+
+    // -------------------------------------------------------------
     test('Parse visibility', () {
       const input = '''
         test { 

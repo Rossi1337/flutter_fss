@@ -563,9 +563,12 @@ class FssRuleBlock {
 
   /// Transforms and replaces text content
   /// This applies the "text_transformation" and "content" to the input text
-  String transformText(String input) {
+  ///
+  /// [nesting] is the quote nesting level used for `content: open-quote`/
+  /// `close-quote` (0 at the top level).
+  String transformText(String input, {int nesting = 0}) {
     var result = input;
-    result = _replaceContent(result);
+    result = _replaceContent(result, nesting: nesting);
     result = _applyTextTransform(result);
     return result;
   }
@@ -1079,9 +1082,11 @@ class FssRuleBlock {
   }
 
   /// Replaces the input content in line with the "content" property
-  String _replaceContent(String input) {
+  String _replaceContent(String input, {int nesting = 0}) {
     final contentMode = get(FssProperty.content.name);
-    return replaceContent(contentMode, input);
+    final quotesValue = get(FssProperty.quote.name);
+    final quotes = quotesValue == null ? null : parseQuotes(quotesValue.value);
+    return replaceContent(contentMode, input, quotes: quotes, nesting: nesting);
   }
 
   /// Parses a gradient to definition

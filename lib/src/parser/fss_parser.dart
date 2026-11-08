@@ -901,8 +901,22 @@ ImageProvider parseImageSource(FssPropertyValue valueDef) {
   return AssetImage(valueDef.value);
 }
 
+/// The CSS default for the `quote` property, decoded:
+/// left/right double quote and left/right single quote.
+const _defaultQuotes = ['\u201c', '\u201d', '\u2018', '\u2019'];
+
 /// Parses a content replacement value.
-String replaceContent(FssPropertyValue? contentMode, String input) {
+///
+/// [quotes] is the decoded `quote` property value (a list of alternating
+/// open/close quote strings). If it is null or empty the CSS default is
+/// used. [nesting] is the quote nesting level (0 at the top level) and
+/// selects the quote pair to use, cycling through the list.
+String replaceContent(
+  FssPropertyValue? contentMode,
+  String input, {
+  List<String>? quotes,
+  int nesting = 0,
+}) {
   var result = input;
   if (contentMode != null) {
     switch (contentMode.value) {
@@ -911,15 +925,70 @@ String replaceContent(FssPropertyValue? contentMode, String input) {
       case 'normal':
         break;
       case 'open-quote':
-        // TODO get this from "quote"
-        result = '"';
+        result = _selectQuote(quotes, nesting, close: false) ?? result;
       case 'close-quote':
-        // TODO get this from "quote"
-        result = '"';
+        result = _selectQuote(quotes, nesting, close: true) ?? result;
       default:
         // The value is a quoted string that needs to be decoded.
         result = _decodeContentString(contentMode.value);
     }
+  }
+  return result;
+}
+
+/// Selects the quote string for the given nesting level.
+///
+/// The [quotes] list is read as pairs of open/close quotes, and the
+/// nesting level cycles through the pairs. If the list has an odd number
+/// of strings, the last string closes its pair as well.
+///
+/// Returns the CSS default quotes when [quotes] is null or empty, and
+/// null for a [nesting] level below zero.
+String? _selectQuote(List<String>? quotes, int nesting, {required bool close}) {
+  if (nesting < 0) {
+    return null;
+  }
+  final effective =
+      (quotes == null || quotes.isEmpty) ? _defaultQuotes : quotes;
+  final pairCount = (effective.length + 1) ~/ 2;
+  final pairIndex = nesting % pairCount;
+  final index = (pairIndex * 2 + (close ? 1 : 0)).clamp(0, effective.length - 1);
+  return effective[index];
+}
+
+/// Parses a `quote` property value into a list of decoded quote strings.
+///
+/// The value is a list of strings, each quoted with single or double
+/// quotes and possibly containing CSS escape sequences. Whitespace
+/// between the strings is ignored.
+List<String> parseQuotes(String value) {
+  final result = <String>[];
+  var i = 0;
+  while (i < value.length) {
+    final c = value[i];
+    if (c != '"' && c != '\'') {
+      i++;
+      continue;
+    }
+    // Scan to the matching closing quote, skipping escaped characters.
+    var j = i + 1;
+    var closed = false;
+    while (j < value.length) {
+      if (value[j] == '\\' && j + 1 < value.length) {
+        j += 2;
+        continue;
+      }
+      if (value[j] == c) {
+        closed = true;
+        break;
+      }
+      j++;
+    }
+    if (!closed) {
+      break;
+    }
+    result.add(_decodeContentString(value.substring(i, j + 1)));
+    i = j + 1;
   }
   return result;
 }
