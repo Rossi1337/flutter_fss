@@ -490,7 +490,9 @@ void parseFssRule(
     return;
   }
 
-  final keepCase = name.contains('-image') || name.contains('font-family');
+  final keepCase = name.contains('-image') ||
+      name.contains('font-family') ||
+      name.startsWith(FssProperty.varPrefix);
   final value = keepCase ? valueDef.trim() : valueDef.toLowerCase().trim();
 
   // Check if the property is a shorthand property and parse it
@@ -602,80 +604,117 @@ void parseSideValues(
   }
 }
 
-/// Parses the font property and splits it into its components.
+/// Parses the `font` shorthand property and splits it into its components.
+///
+/// Supported grammar (only the size and family slots are required; the
+/// leading style / variant / weight slots are optional and may appear in any
+/// order before the size):
+///
+///     font: [ <font-style> | <font-variant> | <font-weight> ]*
+///           <font-size> [ / <line-height> ]? <font-family>;
+///
+/// The whole value is resolved ([FssRuleBlock.resolveValue]) before it is
+/// tokenized so that `var()` references – including multi-token ones – are
+/// expanded first. The font family is everything after the size and is kept
+/// in its original case (it may be a multi-word, quoted name or a comma
+/// separated list).
 void parseFont(String valueDef, FssRuleBlock currentRule, int lineNo) {
-  // we get the case insensitive string here because of the font family
-  // that might use upper case.
+  // Resolve all var() references up front so that multi-token variables are
+  // expanded before the value is split into its parts.
+  final value = currentRule.resolveValue(valueDef);
+  if (value == null) {
+    return;
+  }
+  final tokens = value.trim().split(RegExp(r'\s+'));
 
-  // TODO improve parsing of optional values
-  // font: font-style font-variant font-weight font-size/line-height font-family|caption|icon|menu|message-box|small-caption|status-bar|initial|inherit;
-  final values = splitValues(currentRule, valueDef);
-  // TODO _resolve the parts
-  if (values.length == 1) {
+  // Walk the leading tokens and classify the optional style / variant /
+  // weight slots. Parsing stops at the first token that does not belong to
+  // one of those slots, i.e. the mandatory font-size.
+  String? style;
+  String? weight;
+  int i = 0;
+  for (; i < tokens.length; i++) {
+    final token = tokens[i].toLowerCase();
+    switch (token) {
+      case 'italic':
+      case 'oblique':
+        style = token;
+        continue;
+      case 'small-caps':
+        // font-variant is not a separate property here; consume the token so
+        // it is not mistaken for the font-size.
+        continue;
+      case 'normal':
+        // 'normal' is the default for both style and weight; just consume
+        // the token.
+        continue;
+      case 'bold':
+      case 'bolder':
+      case 'lighter':
+        weight = token;
+        continue;
+    }
+    // A bare integer in the range 100..900 is a numeric font weight. Other
+    // bare numbers (e.g. a unit-less size) are left for the size slot.
+    if (RegExp(r'^\d+$').hasMatch(token)) {
+      final num = int.tryParse(token);
+      if (num != null && num >= 100 && num <= 900) {
+        weight = token;
+        continue;
+      }
+    }
+    break;
+  }
+
+  // Font-size (with optional /line-height) followed by the font family.
+  String? size;
+  String? lineHeight;
+  String family = '';
+  if (i < tokens.length && _isFontSizeToken(tokens[i])) {
+    final parts = tokens[i].split('/');
+    size = parts[0];
+    if (parts.length > 1) {
+      lineHeight = parts[1];
+    }
+    family = tokens.sublist(i + 1).join(' ');
+  } else {
+    // No size present; the remaining tokens are the font family (e.g. the
+    // system font keywords caption, icon, ...).
+    family = tokens.sublist(i).join(' ');
+  }
+
+  if (style != null) {
+    parseFssRule(currentRule, FssProperty.font_style.name, style, lineNo);
+  }
+  if (weight != null) {
+    parseFssRule(currentRule, FssProperty.font_weight.name, weight, lineNo);
+  }
+  if (size != null) {
+    parseFssRule(currentRule, FssProperty.font_size.name, size, lineNo);
+  }
+  if (lineHeight != null) {
     parseFssRule(
       currentRule,
-      FssProperty.font_family.name,
-      values[0],
-      lineNo,
-    );
-  } else if (values.length == 2) {
-    parseFssRule(
-      currentRule,
-      FssProperty.font_size.name,
-      values[0].toLowerCase(),
-      lineNo,
-    );
-    parseFssRule(
-      currentRule,
-      FssProperty.font_family.name,
-      values[1],
-      lineNo,
-    );
-  } else if (values.length == 3) {
-    parseFssRule(
-      currentRule,
-      FssProperty.font_weight.name,
-      values[0].toLowerCase(),
-      lineNo,
-    );
-    parseFssRule(
-      currentRule,
-      FssProperty.font_size.name,
-      values[1].toLowerCase(),
-      lineNo,
-    );
-    parseFssRule(
-      currentRule,
-      FssProperty.font_family.name,
-      values[2],
-      lineNo,
-    );
-  } else if (values.length >= 4) {
-    parseFssRule(
-      currentRule,
-      FssProperty.font_style.name,
-      values[0].toLowerCase(),
-      lineNo,
-    );
-    parseFssRule(
-      currentRule,
-      FssProperty.font_weight.name,
-      values[1].toLowerCase(),
-      lineNo,
-    );
-    parseFssRule(
-      currentRule,
-      FssProperty.font_size.name,
-      values[2].toLowerCase(),
-      lineNo,
-    );
-    parseFssRule(
-      currentRule,
-      FssProperty.font_family.name,
-      values[3],
+      FssProperty.line_height.name,
+      lineHeight,
       lineNo,
     );
   }
+  if (family.isNotEmpty) {
+    parseFssRule(
+      currentRule,
+      FssProperty.font_family.name,
+      family,
+      lineNo,
+    );
+  }
+}
+
+/// Returns true if [token] looks like a font-size: a number, optionally with
+/// a unit, optionally followed by `/line-height`.
+bool _isFontSizeToken(String token) {
+  final main = token.split('/').first;
+  return RegExp(r'^\d+(\.\d+)?([a-z%]+)?$').hasMatch(main.toLowerCase());
 }
 
 /// Splits function parameter by , supporting functions in functions.

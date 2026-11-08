@@ -539,6 +539,98 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    group('font shorthand', () {
+      test('size and family only', () {
+        const input = 'test { font: 16px Roboto; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('style, size and family', () {
+        const input = 'test { font: italic 16px Roboto; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontStyle, FontStyle.italic);
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('numeric weight, size and family', () {
+        const input = 'test { font: 700 16px Roboto; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontWeight, FontWeight.w700);
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('style and numeric weight, size and family', () {
+        const input = 'test { font: italic 700 16px Roboto; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontStyle, FontStyle.italic);
+        expect(styles.textStyle?.fontWeight, FontWeight.w700);
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('size with line-height and family', () {
+        const input = 'test { font: 16px/20px Roboto; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.lineHeight, 20);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('all slots: style weight size/line-height family', () {
+        const input = 'test { font: italic 700 16px/24px Roboto; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontStyle, FontStyle.italic);
+        expect(styles.textStyle?.fontWeight, FontWeight.w700);
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.lineHeight, 24);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('multi-word family is kept whole', () {
+        const input = 'test { font: 16px "Times New Roman"; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Times New Roman');
+      });
+
+      test('family with fallback', () {
+        const input = 'test { font: 16px Roboto, SansSerif; }';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+        expect(styles.textStyle?.fontFamilyFallback?[0], 'SansSerif');
+      });
+
+      test('resolves var() parts', () {
+        const input = '''
+          test {
+            --fsize: 16px;
+            --ffam: Roboto;
+            font: bold var(--fsize) var(--ffam);
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontWeight, FontWeight.bold);
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+
+      test('resolves multi-token var() part', () {
+        const input = '''
+          test {
+            --fspec: italic 16px;
+            font: var(--fspec) Roboto;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.textStyle?.fontStyle, FontStyle.italic);
+        expect(styles.textStyle?.fontSize, 16);
+        expect(styles.textStyle?.fontFamily, 'Roboto');
+      });
+    });
+
+    // -------------------------------------------------------------
     test('Parse text-decoration', () {
       const input = '''
         test { 
