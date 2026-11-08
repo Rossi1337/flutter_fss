@@ -556,6 +556,52 @@ void splitShortHand(
   }
 }
 
+/// Parses the `border-radius` shorthand.
+///
+/// Supports the optional `/` form for elliptical corners, e.g.
+/// `border-radius: 20px / 10px` or `border-radius: 20px 10px / 5px 2px`. Each
+/// line holds 1–4 values in CSS box order (top-left, top-right, bottom-right,
+/// bottom-left). Each corner is stored as the horizontal value followed by
+/// the optional vertical value, which [FssRuleBlock] turns into a
+/// `Radius.elliptical` (or a circle when a single value is given).
+void parseBorderRadius(String valueDef, FssRuleBlock currentRule, int lineNo) {
+  final corners = [
+    FssProperty.border_top_left_radius.name,
+    FssProperty.border_top_right_radius.name,
+    FssProperty.border_bottom_right_radius.name,
+    FssProperty.border_bottom_left_radius.name,
+  ];
+  final slash = valueDef.split('/');
+  final hValues = _expandBoxLine(slash[0]);
+  final vValues = slash.length > 1 ? _expandBoxLine(slash[1]) : null;
+  for (int i = 0; i < 4; i++) {
+    final h = hValues[i];
+    final v = vValues == null ? null : vValues[i];
+    parseFssRule(
+      currentRule,
+      corners[i],
+      v == null ? h : '$h $v',
+      lineNo,
+    );
+  }
+}
+
+/// Splits a CSS box-order line of 1–4 whitespace separated values into the
+/// four corner values: top-left, top-right, bottom-right, bottom-left.
+List<String> _expandBoxLine(String line) {
+  final v = line.trim().split(RegExp(r'\s+'));
+  switch (v.length) {
+    case 1:
+      return [v[0], v[0], v[0], v[0]];
+    case 2:
+      return [v[0], v[1], v[0], v[1]];
+    case 3:
+      return [v[0], v[1], v[2], v[1]];
+    default:
+      return [v[0], v[1], v[2], v[3]];
+  }
+}
+
 /// Parse the 4 values for: top, right, bottom, left
 void parseBoxValues(
   List<String> properties,
@@ -1264,12 +1310,7 @@ final _shorthandParsers = {
         FssProperty.border_left_style.name,
       ], v, r, l),
   FssProperty.border_radius.name: (String v, FssRuleBlock r, int l) =>
-      parseBoxValues([
-        FssProperty.border_top_left_radius.name,
-        FssProperty.border_top_right_radius.name,
-        FssProperty.border_bottom_right_radius.name,
-        FssProperty.border_bottom_left_radius.name,
-      ], v, r, l),
+      parseBorderRadius(v, r, l),
   FssProperty.text_stroke.name: (String v, FssRuleBlock r, int l) =>
       splitShortHand([
         FssProperty.text_stroke_width.name,

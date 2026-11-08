@@ -201,20 +201,31 @@ class FssRuleBlock {
   }
 
   BorderRadiusGeometry? _computeBorderRadius() {
-    final tl = getSize(FssProperty.border_top_left_radius.name);
-    final tr = getSize(FssProperty.border_top_right_radius.name);
-    final br = getSize(FssProperty.border_bottom_right_radius.name);
-    final bl = getSize(FssProperty.border_bottom_left_radius.name);
-    if (tl == null && tr == null && bl == null && br == null) {
+    final tl = getString(FssProperty.border_top_left_radius.name);
+    final tr = getString(FssProperty.border_top_right_radius.name);
+    final br = getString(FssProperty.border_bottom_right_radius.name);
+    final bl = getString(FssProperty.border_bottom_left_radius.name);
+    if (tl == null && tr == null && br == null && bl == null) {
       return null;
     }
-    // TODO support elliptical  corners too?
+
+    // Each corner is "<h-radius> [v-radius]": one value is a circle, two
+    // values are an elliptical (horizontal / vertical) radius.
+    Radius radiusFor(String? value) {
+      if (value == null) {
+        return Radius.zero;
+      }
+      final parts = value.trim().split(RegExp(r'\s+'));
+      final h = convert(parts[0]);
+      final v = parts.length > 1 ? convert(parts[1]) : h;
+      return Radius.elliptical(h, v);
+    }
 
     return BorderRadius.only(
-      topLeft: tl == null ? Radius.zero : Radius.circular(tl),
-      topRight: tr == null ? Radius.zero : Radius.circular(tr),
-      bottomLeft: bl == null ? Radius.zero : Radius.circular(bl),
-      bottomRight: br == null ? Radius.zero : Radius.circular(br),
+      topLeft: radiusFor(tl),
+      topRight: radiusFor(tr),
+      bottomLeft: radiusFor(bl),
+      bottomRight: radiusFor(br),
     );
   }
 

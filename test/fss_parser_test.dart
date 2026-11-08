@@ -566,6 +566,61 @@ void main() {
     });
 
     // -------------------------------------------------------------
+    group('elliptical border radius', () {
+      test('per-corner two values', () {
+        const input = '''
+          test {
+            border-top-left-radius: 20px 10px;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(
+          styles.borderRadius,
+          BorderRadius.only(
+            topLeft: const Radius.elliptical(20, 10),
+          ),
+        );
+      });
+
+      test('shorthand h / v applies to all corners', () {
+        const input = '''
+          test {
+            border-radius: 20px / 10px;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(
+          styles.borderRadius,
+          BorderRadius.all(const Radius.elliptical(20, 10)),
+        );
+      });
+
+      test('shorthand 4-value h / v', () {
+        const input = '''
+          test {
+            border-radius: 20px 10px / 5px 2px;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(
+          styles.borderRadius,
+          BorderRadius.only(
+            topLeft: const Radius.elliptical(20, 5),
+            topRight: const Radius.elliptical(10, 2),
+            bottomRight: const Radius.elliptical(20, 5),
+            bottomLeft: const Radius.elliptical(10, 2),
+          ),
+        );
+      });
+
+      test('single value still circular', () {
+        const input = '''
+          test {
+            border-radius: 5px;
+          } ''';
+        final styles = parseStylesheet(input).first.properties;
+        expect(styles.borderRadius, BorderRadius.circular(5));
+      });
+    });
+
+    // -------------------------------------------------------------
     test('Parse font3', () {
       const input = '''
         test { 
