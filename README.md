@@ -979,6 +979,20 @@ Initial value:
 Example: ``  
 
 ----
+##### opacity
+
+Allowed values: *any number between 0 and 1, or a percentage*  
+Initial value: *1*
+
+Makes the element (and all of its descendants) more transparent, matching the
+CSS group opacity semantic. Accepts a plain number (`0.5`) or a percentage
+(`50%`). Values are clamped to the range 0..1. An FSS widget applies this as a
+single group opacity over its whole content subtree, so nested FSS widgets
+compose multiplicatively just like in CSS.
+
+Example: `opacity: 0.5;`  
+
+----
 ##### padding
 
 

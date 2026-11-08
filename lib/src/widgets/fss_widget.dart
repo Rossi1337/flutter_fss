@@ -47,9 +47,18 @@ abstract class FssWidget extends StatelessWidget {
       fssType: fssType,
     );
 
-    final content = !applicableStyles.visible
+    var content = !applicableStyles.visible
         ? const SizedBox.shrink()
         : buildContent(context, applicableStyles);
+
+    // Apply CSS group opacity. Wrapping the whole built subtree in an
+    // [Opacity] matches the CSS semantic (the element and all of its
+    // descendants are faded as a group). Nested FSS widgets each wrap their
+    // own content, so values compose multiplicatively like in CSS.
+    final opacity = applicableStyles.opacity;
+    if (opacity < 1.0) {
+      content = Opacity(opacity: opacity, child: content);
+    }
 
     return FssParent(
       applicableStyles: applicableStyles,

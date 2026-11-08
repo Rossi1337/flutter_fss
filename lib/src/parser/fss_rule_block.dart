@@ -362,6 +362,26 @@ class FssRuleBlock {
 
   String? get whiteSpace => getString(FssProperty.white_space.name);
 
+  /// The CSS group opacity as a value between [0.0] and [1.0].
+  ///
+  /// Accepts a plain number (`0.5`, `.5`) or a percentage (`50%`). Values
+  /// are clamped to the [0.0, 1.0] range. Defaults to [1.0] (fully
+  /// opaque) when the property is not set.
+  double get opacity {
+    final value = getString(FssProperty.opacity.name);
+    if (value == null) {
+      return 1.0;
+    }
+    var v = value.trim();
+    double result;
+    if (v.endsWith('%')) {
+      result = double.parse(v.substring(0, v.length - 1)) / 100.0;
+    } else {
+      result = double.parse(v);
+    }
+    return result.clamp(0.0, 1.0);
+  }
+
   /// Should we wrap text or render it in a single line?
   /// This is determined by looking at the white-space property
   bool get wrapText => 'nowrap' != whiteSpace;
