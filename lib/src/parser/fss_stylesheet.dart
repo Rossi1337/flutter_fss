@@ -55,8 +55,6 @@ class FlutterStyleSheet {
     FssRuleBlock? parentStyles,
     MediaQueryData? media,
   }) {
-    // TODO suport attributes in the selector
-
     var idToMatch = matchId;
     if (idToMatch.isNotEmpty && !idToMatch.startsWith('#')) {
       idToMatch = '#$idToMatch';

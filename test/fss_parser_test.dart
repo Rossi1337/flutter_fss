@@ -1023,8 +1023,11 @@ void main() {
     // -------------------------------------------------------------
     test('Class with attribute', () {
       final selector = FssSelector.parse('.class1[attribute1].class2');
-      expect(selector.classes[0], '.class1[attribute1]');
+      expect(selector.classes[0], '.class1');
       expect(selector.classes[1], '.class2');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'attribute1'),
+      ]);
     });
 
     // -------------------------------------------------------------
@@ -1075,6 +1078,214 @@ void main() {
         expect(styles.textStyle?.fontSize, 32);
       },
     );
+  });
+
+  group('Attribute selectors', () {
+    // -------------------------------------------------------------
+    test('Parse existence attribute', () {
+      final selector = FssSelector.parse('div[lang]');
+      expect(selector.type, 'div');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'lang'),
+      ]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse attribute with value', () {
+      final selector = FssSelector.parse('div[lang=en]');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'lang', operator: '=', value: 'en'),
+      ]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse attribute with quoted value', () {
+      final selector = FssSelector.parse('div[title="a b"]');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'title', operator: '=', value: 'a b'),
+      ]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse all attribute operators', () {
+      expect(
+        FssSelector.parse('a[href^=http]').attributes.single.operator,
+        '^=',
+      );
+      expect(
+        FssSelector.parse('a[href\$=html]').attributes.single.operator,
+        '\$=',
+      );
+      expect(
+        FssSelector.parse('a[href|=www]').attributes.single.operator,
+        '|=',
+      );
+      expect(
+        FssSelector.parse('a[href*=example]').attributes.single.operator,
+        '*=',
+      );
+      expect(
+        FssSelector.parse('a[rel~=next]').attributes.single.operator,
+        '~=',
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Parse attribute alone as selector', () {
+      final selector = FssSelector.parse('[lang]');
+      expect(selector.type, '');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'lang'),
+      ]);
+    });
+
+    // -------------------------------------------------------------
+    test('Parse multiple attributes', () {
+      final selector = FssSelector.parse('div[lang][region]');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'lang'),
+        FssAttributeCondition(name: 'region'),
+      ]);
+    });
+
+    // -------------------------------------------------------------
+    test('Attribute with type class and id', () {
+      final selector = FssSelector.parse('div[lang=en].foo#x');
+      expect(selector.type, 'div');
+      expect(selector.classes, ['.foo']);
+      expect(selector.id, '#x');
+      expect(selector.attributes, [
+        FssAttributeCondition(name: 'lang', operator: '=', value: 'en'),
+      ]);
+    });
+
+    // -------------------------------------------------------------
+    test('Existence attribute matches if attribute is set', () {
+      final selector = FssSelector.parse('div[lang]');
+      expect(
+        selector.getSpecificity('div', '', [], null, {'lang': 'en'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+      expect(
+        selector.getSpecificity('div', '', [], null, {'href': 'x'}),
+        FssSpecificity.noMatch,
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Value attribute matches case-insensitively', () {
+      final selector = FssSelector.parse('div[lang=en]');
+      expect(
+        selector.getSpecificity('div', '', [], null, {'lang': 'EN'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+      expect(
+        selector.getSpecificity('div', '', [], null, {'lang': 'de'}),
+        FssSpecificity.noMatch,
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Operator attribute matching', () {
+      final prefix = FssSelector.parse('div[lang^=en]');
+      expect(
+        prefix.getSpecificity('div', '', [], null, {'lang': 'en-gb'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+      expect(
+        prefix.getSpecificity('div', '', [], null, {'lang': 'de'}),
+        FssSpecificity.noMatch,
+      );
+
+      final suffix = FssSelector.parse('div[lang\$=gb]');
+      expect(
+        suffix.getSpecificity('div', '', [], null, {'lang': 'en-gb'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+
+      final dash = FssSelector.parse('div[lang|=en]');
+      expect(
+        dash.getSpecificity('div', '', [], null, {'lang': 'en'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+      expect(
+        dash.getSpecificity('div', '', [], null, {'lang': 'en-gb'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+      expect(
+        dash.getSpecificity('div', '', [], null, {'lang': 'english'}),
+        FssSpecificity.noMatch,
+      );
+
+      final contains = FssSelector.parse('div[href*=exa]');
+      expect(
+        contains.getSpecificity(
+            'div', '', [], null, {'href': 'https://example.com'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+
+      final word = FssSelector.parse('div[lang~=gb]');
+      expect(
+        word.getSpecificity('div', '', [], null, {'lang': 'de en gb'}),
+        FssSpecificity(classes: 1, types: 1),
+      );
+      expect(
+        word.getSpecificity('div', '', [], null, {'lang': 'de en gbx'}),
+        FssSpecificity.noMatch,
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Multiple attributes all have to match', () {
+      final selector = FssSelector.parse('div[lang][region]');
+      expect(
+        selector.getSpecificity(
+            'div', '', [], null, {'lang': 'en', 'region': 'eu'}),
+        FssSpecificity(classes: 2, types: 1),
+      );
+      expect(
+        selector.getSpecificity('div', '', [], null, {'lang': 'en'}),
+        FssSpecificity.noMatch,
+      );
+    });
+
+    // -------------------------------------------------------------
+    test('Attribute selector without attributes to match is no match', () {
+      final selector = FssSelector.parse('div[lang]');
+      expect(selector.getSpecificity('div', '', [], null, null),
+          FssSpecificity.noMatch);
+      expect(selector.getSpecificity('div', '', [], null, {}),
+          FssSpecificity.noMatch);
+    });
+
+    // -------------------------------------------------------------
+    test('Stylesheet rule with attribute selector', () {
+      const input = '''
+        div[lang=en] { 
+          font-size: 32px;
+        } ''';
+      final sheet = FlutterStyleSheet(stylesheet: input);
+      final match =
+          sheet.resolveStyles(matchType: 'div', matchAttributes: {'lang': 'en'});
+      expect(match.textStyle?.fontSize, 32);
+      // The attribute does not match, so the rule is ignored and the
+      // default font-size applies.
+      final noMatch =
+          sheet.resolveStyles(matchType: 'div', matchAttributes: {'lang': 'de'});
+      expect(noMatch.textStyle?.fontSize, 16);
+    });
+
+    // -------------------------------------------------------------
+    test('Plain type selector is not affected by element attributes', () {
+      const input = '''
+        div { 
+          font-size: 32px;
+        } ''';
+      final sheet = FlutterStyleSheet(stylesheet: input);
+      final block =
+          sheet.resolveStyles(matchType: 'div', matchAttributes: {'lang': 'en'});
+      expect(block.textStyle?.fontSize, 32);
+    });
   });
 
   // -------------------------------------------------------------
