@@ -79,3 +79,13 @@ build/
 /coverage/lcov.info
 /coverage/
 
+example/linux/.gitignore
+example/linux/CMakeLists.txt
+example/linux/flutter/CMakeLists.txt
+example/linux/flutter/generated_plugin_registrant.cc
+example/linux/flutter/generated_plugin_registrant.h
+example/linux/flutter/generated_plugins.cmake
+example/linux/runner/CMakeLists.txt
+example/linux/runner/main.cc
+example/linux/runner/my_application.cc
+example/linux/runner/my_application.h
