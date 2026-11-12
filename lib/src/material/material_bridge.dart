@@ -375,17 +375,17 @@ String? _translateFontWeight(FontWeight? fontWeight) {
   if (fontWeight == null) {
     return null;
   }
-  switch (fontWeight.value + 1) {
-    case 4:
+  switch (fontWeight.value) {
+    case 400:
       return 'normal';
-    case 7:
+    case 700:
       return 'bold';
-    case 8:
+    case 800:
       return 'bolder';
-    case 3:
+    case 300:
       return 'lighter';
     default:
-      return '${(fontWeight.value + 1) * 100}';
+      return '${fontWeight.value}';
   }
 }
 
