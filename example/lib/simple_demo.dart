@@ -45,13 +45,16 @@ class _TestAppState extends State<TestApp> {
     return MaterialApp(
       title: 'FSS Simple Demo',
       // Install the theme with the given stylesheet
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         // Add a div with a given "class" and a text with a given "id"
-        child: Center(
-          child: Fss<div>(
-            clazz: 'box',
-            c: Fss<span>(id: 'myText', c: 'Hello World'),
+        child: Material(
+          color: Colors.white,
+          child: Center(
+            child: Fss<div>(
+              clazz: 'box',
+              c: Fss<span>(id: 'myText', c: 'Hello World'),
+            ),
           ),
         ),
       ),

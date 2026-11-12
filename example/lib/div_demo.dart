@@ -44,21 +44,24 @@ class _TestAppState extends State<TestApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Div Demo',
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Fss<div>(c: 'A div element with no specified margins.'),
-              Fss<div>(c: 'A div element with no specified margins.'),
-              Fss<div>(c: 'A div element with no specified margins.'),
-              Fss<div>(
-                clazz: 'ex1',
-                c: 'A div element with no specified margins.',
-              ),
-              Fss<div>(c: 'A div element with no specified margins.'),
-            ],
+        child: Material(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Fss<div>(c: 'A div element with no specified margins.'),
+                Fss<div>(c: 'A div element with no specified margins.'),
+                Fss<div>(c: 'A div element with no specified margins.'),
+                Fss<div>(
+                  clazz: 'ex1',
+                  c: 'A div element with no specified margins.',
+                ),
+                Fss<div>(c: 'A div element with no specified margins.'),
+              ],
+            ),
           ),
         ),
       ),

@@ -59,58 +59,61 @@ class _TestAppState extends State<TestApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS List Demo',
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        child: ListView(
-          children: [
-            Fss.ul(
-              children: [
-                Fss<span>(c: 'With default icon'),
-                Fss<span>(c: 'Second'),
-                Fss<span>(c: 'Third'),
-              ],
-            ),
-            Fss.ul(
-              clazz: 'custom',
-              children: [
-                Fss<span>(c: 'With custom text'),
-                Fss<span>(c: 'Second'),
-                Fss<span>(c: 'Third'),
-              ],
-            ),
-            Fss.ul(
-              clazz: 'square',
-              children: [
-                Fss<span>(c: 'With square icon'),
-                Fss<span>(c: 'Second'),
-                Fss<span>(c: 'Third'),
-              ],
-            ),
-            Fss.ol(
-              clazz: 'decimal',
-              children: [
-                Fss<span>(c: 'With number'),
-                Fss<span>(c: 'Second'),
-                Fss<span>(c: 'Third'),
-              ],
-            ),
-            Fss.ol(
-              clazz: 'roman',
-              children: [
-                Fss<span>(c: 'With roman numbers'),
-                Fss<span>(c: 'Second'),
-                Fss<span>(c: 'Third'),
-              ],
-            ),
-            Fss.ol(
-              clazz: 'spacing',
-              children: [
-                Fss<span>(c: 'With custom spacing'),
-                Fss<span>(c: 'Second'),
-                Fss<span>(c: 'Third'),
-              ],
-            ),
-          ],
+        child: Material(
+          color: Colors.white,
+          child: ListView(
+            children: [
+              Fss.ul(
+                children: [
+                  Fss<span>(c: 'With default icon'),
+                  Fss<span>(c: 'Second'),
+                  Fss<span>(c: 'Third'),
+                ],
+              ),
+              Fss.ul(
+                clazz: 'custom',
+                children: [
+                  Fss<span>(c: 'With custom text'),
+                  Fss<span>(c: 'Second'),
+                  Fss<span>(c: 'Third'),
+                ],
+              ),
+              Fss.ul(
+                clazz: 'square',
+                children: [
+                  Fss<span>(c: 'With square icon'),
+                  Fss<span>(c: 'Second'),
+                  Fss<span>(c: 'Third'),
+                ],
+              ),
+              Fss.ol(
+                clazz: 'decimal',
+                children: [
+                  Fss<span>(c: 'With number'),
+                  Fss<span>(c: 'Second'),
+                  Fss<span>(c: 'Third'),
+                ],
+              ),
+              Fss.ol(
+                clazz: 'roman',
+                children: [
+                  Fss<span>(c: 'With roman numbers'),
+                  Fss<span>(c: 'Second'),
+                  Fss<span>(c: 'Third'),
+                ],
+              ),
+              Fss.ol(
+                clazz: 'spacing',
+                children: [
+                  Fss<span>(c: 'With custom spacing'),
+                  Fss<span>(c: 'Second'),
+                  Fss<span>(c: 'Third'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

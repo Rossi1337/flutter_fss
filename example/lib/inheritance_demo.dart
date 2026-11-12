@@ -44,20 +44,23 @@ class _TestAppState extends State<TestApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Inheritance Demo',
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
         // This is the "parent" for the text elements
-        child: Fss<div>(
-          clazz: 'mybox',
-          c: ListView(
-            children: [
-              // Center and ListView will be ignored as they are not stylable
-              Center(
-                child:
-                    Fss<span>(id: 'text1', c: 'Color inherited from parent.'),
-              ),
-              Fss<span>(id: 'text2', c: 'Color resolved via ID'),
-            ],
+        child: Material(
+          color: Colors.white,
+          child: Fss<div>(
+            clazz: 'mybox',
+            c: ListView(
+              children: [
+                // Center and ListView will be ignored as they are not stylable
+                Center(
+                  child:
+                      Fss<span>(id: 'text1', c: 'Color inherited from parent.'),
+                ),
+                Fss<span>(id: 'text2', c: 'Color resolved via ID'),
+              ],
+            ),
           ),
         ),
       ),

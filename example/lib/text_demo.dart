@@ -88,54 +88,59 @@ class _TestAppState extends State<TestApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Text Demo',
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ListView(
-            children: [
-              Fss<span>(
-                id: 'text1',
-                c: 'Size 32, Red: Almost before we knew it, we had left the ground.',
+        child: Material(
+          color: Colors.white,
+          child: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListView(
+                children: [
+                  Fss<span>(
+                    id: 'text1',
+                    c: 'Size 32, Red: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text2',
+                    c: 'Bold: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text3',
+                    c: 'Italic: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text4',
+                    c: 'Underline dashed: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text5',
+                    c: 'Line through: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text6',
+                    c: 'Uppercase:  Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text7',
+                    c: 'Shadow: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text8',
+                    c: 'Custom font: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<span>(
+                    id: 'text9',
+                    c: 'Text replacement: Almost before we knew it, we had left the ground.',
+                  ),
+                  Fss<h1>(c: 'Using default html tags'),
+                  Fss<i>(c: '<i>Text by using tag</i>'),
+                  Fss<b>(c: '<b>Text by using tag</b>'),
+                  Fss<s>(c: '<s>Text by using tag</s>'),
+                  Fss<u>(c: '<u>Text  by using tag</u>'),
+                ],
               ),
-              Fss<span>(
-                id: 'text2',
-                c: 'Bold: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text3',
-                c: 'Italic: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text4',
-                c: 'Underline dashed: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text5',
-                c: 'Line through: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text6',
-                c: 'Uppercase:  Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text7',
-                c: 'Shadow: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text8',
-                c: 'Custom font: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<span>(
-                id: 'text9',
-                c: 'Text replacement: Almost before we knew it, we had left the ground.',
-              ),
-              Fss<h1>(c: 'Using default html tags'),
-              Fss<i>(c: '<i>Text by using tag</i>'),
-              Fss<b>(c: '<b>Text by using tag</b>'),
-              Fss<s>(c: '<s>Text by using tag</s>'),
-              Fss<u>(c: '<u>Text  by using tag</u>'),
-            ],
+            ),
           ),
         ),
       ),

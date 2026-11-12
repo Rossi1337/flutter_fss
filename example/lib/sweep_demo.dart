@@ -48,26 +48,29 @@ class _TestAppState extends State<TestApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Sweep Gradient Demo',
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        child: Scaffold(
-          body: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'sweep-gradient(from <angle>, red, blue)',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+        child: Material(
+          color: Colors.white,
+          child: Scaffold(
+            body: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Text(
+                        'sweep-gradient(from <angle>, red, blue)',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                  _row("from 0deg   (12 o'clock)", 'sw0'),
-                  _row("from 90deg  (3 o'clock)", 'sw90'),
-                  _row("from 180deg (6 o'clock)", 'sw180'),
-                  _row("from 270deg (9 o'clock)", 'sw270'),
-                  _row('default     (no from)', 'swdef'),
-                ],
+                    _row("from 0deg   (12 o'clock)", 'sw0'),
+                    _row("from 90deg  (3 o'clock)", 'sw90'),
+                    _row("from 180deg (6 o'clock)", 'sw180'),
+                    _row("from 270deg (9 o'clock)", 'sw270'),
+                    _row('default     (no from)', 'swdef'),
+                  ],
+                ),
               ),
             ),
           ),

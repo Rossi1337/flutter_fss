@@ -35,22 +35,25 @@ class _TestAppState extends State<TestApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FSS Custom Demo',
-      builder: (context, _) => _theme ??= FssTheme.withHtmlDefaults(
+      home: _theme ??= FssTheme.withHtmlDefaults(
         stylesheet: styleSheet,
-        child: Column(
-          children: [
-            Fss.styled(
-              // Via the FssWidgetBuilder we have access to the styles.
-              builder: (context, applicableStyles) {
-                return Text(
-                  'Hello World',
-                  style: TextStyle(color: applicableStyles.color),
-                );
-              },
-            ),
-            const MyWidget(),
-            const MyWidget2(),
-          ],
+        child: Material(
+          color: Colors.white,
+          child: Column(
+            children: [
+              Fss.styled(
+                // Via the FssWidgetBuilder we have access to the styles.
+                builder: (context, applicableStyles) {
+                  return Text(
+                    'Hello World',
+                    style: TextStyle(color: applicableStyles.color),
+                  );
+                },
+              ),
+              const MyWidget(),
+              const MyWidget2(),
+            ],
+          ),
         ),
       ),
     );
