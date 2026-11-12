@@ -1068,7 +1068,8 @@ String? _selectQuote(List<String>? quotes, int nesting, {required bool close}) {
       (quotes == null || quotes.isEmpty) ? _defaultQuotes : quotes;
   final pairCount = (effective.length + 1) ~/ 2;
   final pairIndex = nesting % pairCount;
-  final index = (pairIndex * 2 + (close ? 1 : 0)).clamp(0, effective.length - 1);
+  final index =
+      (pairIndex * 2 + (close ? 1 : 0)).clamp(0, effective.length - 1);
   return effective[index];
 }
 
